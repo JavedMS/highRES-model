@@ -37,7 +37,7 @@ $offdigit
 * fx_trans (YES/NO) = fix transmission network to input values
 * fx_natcap (YES/NO) = fix total national capacities ->  let highRES decide where to place them
 
-* pen_gen (ON/OFF) = whether value of lost load (VoLL) is modelled
+* pen_gen (ON/OFF) = weather VoLL is modelled
 * fx_caps_to = file containing capacities to fix the system to
 
 * outname = output name of GDX file
@@ -46,7 +46,7 @@ $setglobal datafolderpath "."
 $setglobal codefolderpath "../../../../resources/4_model_code_shared"
 
 $setglobal log "test_log"
-$setglobal gdx2sql "ON"
+$setglobal gdx2sql "OFF"
 $setglobal cplex_opt_file "1"
 
 $setglobal storage "ON"
@@ -73,7 +73,7 @@ $setglobal dem_yr "2010"
 $setglobal fx_trans "YES"
 $setglobal fx_natcap "NO"
 
-$set pen_gen "OFF"
+$set pen_gen "ON"
 
 $setglobal fx_caps_to ""
 
@@ -230,10 +230,10 @@ gen_varom(non_vre)=gen_fuelcost(non_vre)+gen_emisfac(non_vre)*emis_price+gen_var
 
 
 * Penalty generation setup
-* VoLL set at 20000£/MWh
+* VoLL set at 6000£/MWh
 
 scalar
-pgen /20./;
+pgen /6./;
 
 * Solar marginal
 
@@ -457,7 +457,7 @@ eq_area_max
 
 eq_trans_flow
 eq_trans_bidirect
-$IF "%pen_gen%" == ON eq_pen_gen
+eq_pen_gen
 
 eq_co2_budget
 
@@ -795,7 +795,7 @@ $LABEL nolog
 $INCLUDE %codefolderpath%/highres_results.gms
 
 * dump data to GDX
-$setEnv GDXCOMPRESS 1
+
 execute_unload "%outname%"
 
 * convert GDX to SQLite

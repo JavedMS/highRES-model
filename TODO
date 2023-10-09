@@ -1,0 +1,4 @@
+1. Currently the build_weather rule which takes a lot of resources to run (time,
+    memory, cpu) depends on the highres.ods file. This means it will be rerun,
+    even when there are no changes relevant for it. After changing to csv files,
+    we should be able to have it only read csv files that are relevant to it.

@@ -18,6 +18,9 @@ for psys in pscens:
     esys_scen = "BASE"
 
     scen_db = snakemake.input[1]
+    # pathlib.Path(pathlib.PureWindowsPath(
+    # "C:\\science\\studies\\innopaths\\highres\\scenarios"
+    # "\\gb_ext_scenarios.xls"))
     f_techno = snakemake.input[2]
 
     params_to_write = {}
@@ -74,7 +77,12 @@ for psys in pscens:
         "max ramp",
     ]
 
-    zones = pd.read_csv(snakemake.input[0]).loc[:, "zone"]
+    zones = pd.read_csv(
+        # data_root/"zonal_def"/"zones.csv"
+        snakemake.input[0]
+    ).loc[
+        :, "zone"
+    ]  # .values
 
     scen2dd(
         snakemake.output[1],
@@ -90,12 +98,7 @@ for psys in pscens:
         exist_cap=True,
     )
 
-    trans_links(
-        root,
-        f_techno,
-        aggregated_regions=snakemake.params.aggregated_regions,
-        out=out,
-    )
+    trans_links(root, f_techno, out=out)
 
 
 years = [snakemake.wildcards.year]
@@ -105,6 +108,8 @@ for yr in years:
 
     dstart = datetime.datetime(yr, 1, 1, 0)
     dstop = datetime.datetime(yr, 12, 31, 23)
+
+    # 2012 is close to central over the 2010-2016 period
 
     if calendar.isleap(yr):
         rleap = False

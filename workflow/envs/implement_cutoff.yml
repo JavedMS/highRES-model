@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - jupyter
+  - jupyterlab_code_formatter
+  - black
+  - isort
+  - rioxarray
+  - pandas
+  - xarray
+  - pyarrow
+  - fastparquet
+  - netCDF4
+  - ruff
