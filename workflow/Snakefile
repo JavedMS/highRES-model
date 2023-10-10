@@ -111,7 +111,7 @@ num_parallel_processes = 64
 gamspath = config["paths"]["gams"]
 
 # Absolute path to the input data that is the same across all versions
-shared_input_path = config["paths"]["shared_input"]
+shared_input_path = pathlib.Path(config["paths"]["shared_input"])
 
 # Relative path the model code that is the same across all versions
 #shared_code_path = "resources/4_model_code_shared/"
