@@ -35,7 +35,7 @@ spatials = [
     "region"
 ]
 
-cutoffs_wind = [0, 0.11]
+cutoffs_wind = [0, 0.15]
 
 scenarios = (
     pd.DataFrame(itertools.product(values, repeat=3))
