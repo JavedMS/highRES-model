@@ -73,7 +73,7 @@ $setglobal dem_yr "2010"
 $setglobal fx_trans "YES"
 $setglobal fx_natcap "NO"
 
-$set pen_gen "OFF"
+$set pen_gen "ON"
 
 $setglobal fx_caps_to ""
 
