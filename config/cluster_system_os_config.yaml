@@ -3,4 +3,4 @@ paths:
   shared_input: /fp/projects01/ec85/models/max/special_issue/shared_input/
   abs_shared_code: /fp/projects01/ec85/models/group/joint_wind/model-aggregated/resources/4_model_code_shared/
   abs_con: /cluster/work/projects/ec85/joint-wind/koenandaleksera5/
-  resultsdir: /cluster/work/projects/ec85/joint-wind/model-aggregated/resultscut/
+  resultsdir: /cluster/work/projects/ec85/joint-wind/model-aggregated/resultscosts/
