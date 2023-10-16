@@ -7,35 +7,39 @@
 # slurm_account=ec85 runtime=30 mem_mb_per_cpu=1100 cpus_per_task=4 \
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
-
 # TODO: Default profile is Fox, HPC, profile
 
 configfile: "config/cluster_system_os_config.yaml"
-
 
 import itertools
 import pathlib
 
 import pandas as pd
-import pathlib
 
-inputyears = ["1995",
-"2010"
+inputyears = [
+    "1995",
+    "2010"
 ]
 
-values = ["High",
-"Low"
+values = [
+    "High",
+    "Low"
 ]
-solars = ["High",
-"Low"
+
+solars = [
+    "High",
+    "Low"
 ]
 
 spatials = [
-    # "grid",
+    "grid",
     "region"
 ]
 
-cutoffs_wind = [0, 0.15]
+cutoffs_wind = [
+    0,
+    0.15
+]
 
 scenarios = (
     pd.DataFrame(itertools.product(values, repeat=3))
