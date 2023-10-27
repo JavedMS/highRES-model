@@ -3,43 +3,31 @@
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
 # region:
+# region:
 # snakemake --resources mem_mb=700000 --slurm --default-resources \
 # slurm_account=ec85 runtime=30 mem_mb_per_cpu=1100 cpus_per_task=4 \
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
 # TODO: Default profile is Fox, HPC, profile
 
+
 configfile: "config/cluster_system_os_config.yaml"
+
 
 import itertools
 import pathlib
 
 import pandas as pd
 
-inputyears = [
-    "1995",
-    "2010"
-]
+inputyears = ["1995", "2010"]
 
-values = [
-    "High",
-    "Low"
-]
+values = ["High", "Low"]
 
-solars = [
-    "High",
-    "Low"
-]
+solars = ["High", "Low"]
 
-spatials = [
-    "grid",
-    "region"
-]
+spatials = ["grid", "region"]
 
-cutoffs_wind = [
-    0,
-    0.15
-]
+cutoffs_wind = [0, 0.15]
 
 scenarios = (
     pd.DataFrame(itertools.product(values, repeat=3))
@@ -118,7 +106,7 @@ gamspath = config["paths"]["gams"]
 shared_input_path = pathlib.Path(config["paths"]["shared_input"])
 
 # Relative path the model code that is the same across all versions
-#shared_code_path = "resources/4_model_code_shared/"
+# shared_code_path = "resources/4_model_code_shared/"
 abs_shared_code_path = config["paths"]["abs_shared_code"]
 # abs_shared_code_path = workflow.source_path("../resources/4_model_code_shared/")
 # TODO: Get this to work, maybe with Pathlib
@@ -134,7 +122,7 @@ scenario_exclusions_path = "resources/scenario_exclusions/"
 # resultspath = "results/"
 resultspath = pathlib.Path(config["paths"]["resultsdir"])
 pathlib.Path(resultspath).mkdir(parents=True, exist_ok=True)
-#"/cluster/work/projects/ec85/joint-wind/model-aggregated/resultsoff/"
+# "/cluster/work/projects/ec85/joint-wind/model-aggregated/resultsoff/"
 
 # Write scenarios to file, so results analysis script can check if they are all
 # available.
@@ -187,19 +175,21 @@ rule all:
             neigh=neighs,
             solar=solars,
             spatial=spatials,
-            cutoff_wind=cutoffs_wind
+            cutoff_wind=cutoffs_wind,
         ),
 
+
 rule extract_wind_cap2area:
-    #TODO think about whether we really only should read from the high version
+    # TODO think about whether we really only should read from the high version
     input:
-        odsdatabase="resources/highres_gb_ext_database_High.ods"
+        odsdatabase="resources/highres_gb_ext_database_High.ods",
     output:
-        windcap2area=resultspath + "windcap2area"
+        windcap2area=resultspath + "windcap2area",
     conda:
         "envs/build_windcap2area.yml"
     script:
         "scripts/build_windcap2area.py"
+
 
 rule ensure_gams_template:
     input:
@@ -251,9 +241,9 @@ rule build_technoeconomic_inputs:
         "resources/zones.csv",
         "resources/gb_ext_scenarios.xls",
         "resources/highres_gb_ext_database_{solar}.ods",
-        europecountriescsvlocation = "resources/europe_countries.csv",
-        europedemandcsvlocation = "resources/europe_demand_2006-2015.csv",
-        data2dd = "workflow/scripts/data2dd_funcs.py",
+        europecountriescsvlocation="resources/europe_countries.csv",
+        europedemandcsvlocation="resources/europe_demand_2006-2015.csv",
+        data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
         "envs/build_technoeconomic.yml"
     output:
@@ -306,15 +296,16 @@ rule bias_correct_wind:
         num_near_wind_parks=num_near_wind_parks,
         num_parallel_processes=num_parallel_processes,
     resources:
-        nodes=num_parallel_processes
+        nodes=num_parallel_processes,
     conda:
         "envs/environment.yaml"
     script:
         "scripts/bias_correct_wind.py"
 
+
 rule build_cutoff:
     input:
-        changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres
+        changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
     output:
         exclusiontiff=modelpathyearonly + "cf_exclusion_{cutoff_wind}.tif",
     conda:
@@ -322,41 +313,59 @@ rule build_cutoff:
     notebook:
         "notebooks/build_cutoff_tiff.py.ipynb"
 
+
 def cutoff_needed(wildcards):
     returndict = {}
     if wildcards.cutoff_wind != str(0.0):
-        returndict = {"cutoffexclusiontiff":rules.build_cutoff.output.exclusiontiff}
+        returndict = {"cutoffexclusiontiff": rules.build_cutoff.output.exclusiontiff}
     return returndict
+
 
 def myfunc(wildcards):
     returndict = {}
     if wildcards.fauna != "None" and wildcards.fauna != "Extreme":
-        returndict['faunaex'] = scenario_exclusions_path + "Fauna_{wildcards.fauna}_Exc.zip".format(wildcards=wildcards)
+        returndict[
+            "faunaex"
+        ] = scenario_exclusions_path + "Fauna_{wildcards.fauna}_Exc.zip".format(
+            wildcards=wildcards
+        )
     if wildcards.natur != "None" and wildcards.natur != "Extreme":
-        returndict['naturex'] = scenario_exclusions_path + "Natur_{wildcards.natur}_Exc.zip".format(wildcards=wildcards)
+        returndict[
+            "naturex"
+        ] = scenario_exclusions_path + "Natur_{wildcards.natur}_Exc.zip".format(
+            wildcards=wildcards
+        )
     if wildcards.neigh != "None" and wildcards.neigh != "Extreme":
-        returndict['neighex'] = scenario_exclusions_path + "Neigh_{wildcards.neigh}_Exc.zip".format(wildcards=wildcards)
+        returndict[
+            "neighex"
+        ] = scenario_exclusions_path + "Neigh_{wildcards.neigh}_Exc.zip".format(
+            wildcards=wildcards
+        )
     if wildcards.sami != "None" and wildcards.sami != "Extreme":
-        returndict['samiex'] = scenario_exclusions_path + "Sami_{wildcards.sami}_Exc.zip".format(wildcards=wildcards)
+        returndict[
+            "samiex"
+        ] = scenario_exclusions_path + "Sami_{wildcards.sami}_Exc.zip".format(
+            wildcards=wildcards
+        )
     return returndict
+
 
 rule build_weather:
     input:
         unpack(myfunc),
         unpack(cutoff_needed),
-        WDPA1a = shared_input_path / "geodata/onshore/WDPA_Ia_100.tiff",
-        WDPA1b = shared_input_path / "geodata/onshore/WDPA_Ib_100.tiff",
-        WDPA2 = shared_input_path / "geodata/onshore/WDPA_II_100.tiff",
-        WDPA3 = shared_input_path / "geodata/onshore/WDPA_III_100.tiff",
-        WDPA4 = shared_input_path / "geodata/onshore/WDPA_IV_100.tiff",
-        elevation = shared_input_path / "geodata/onshore/2000m.shp.zip",
-        slope = shared_input_path / "geodata/onshore/15degrees.shp.zip",
-        euroshape = shared_input_path / "geodata/onshore/shapes/NO-NUTS3.geojson",
-        eurooffshoreshape = shared_input_path
+        WDPA1a=shared_input_path / "geodata/onshore/WDPA_Ia_100.tiff",
+        WDPA1b=shared_input_path / "geodata/onshore/WDPA_Ib_100.tiff",
+        WDPA2=shared_input_path / "geodata/onshore/WDPA_II_100.tiff",
+        WDPA3=shared_input_path / "geodata/onshore/WDPA_III_100.tiff",
+        WDPA4=shared_input_path / "geodata/onshore/WDPA_IV_100.tiff",
+        elevation=shared_input_path / "geodata/onshore/2000m.shp.zip",
+        slope=shared_input_path / "geodata/onshore/15degrees.shp.zip",
+        euroshape=shared_input_path / "geodata/onshore/shapes/NO-NUTS3.geojson",
+        eurooffshoreshape=shared_input_path
         / ("geodata/offshore/BOTTOM_MOUNTED_EUROPE_NUTS0" "_NORWAY_NUTS3.geojson"),
-        weatherdata = shared_input_path / "weatherdata/europe_{year}.nc",
-        corine = shared_input_path / "geodata/onshore/corine.tif",
-
+        weatherdata=shared_input_path / "weatherdata/europe_{year}.nc",
+        corine=shared_input_path / "geodata/onshore/corine.tif",
         #cap2area="resources/highres_gb_ext_database_{solar}.ods",
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
         cap2area=ancient("resources/windcap2area"),
@@ -390,9 +399,9 @@ rule build_weather:
     log:
         notebook="logs/notebooks/" + logpath + "highRES-Norway_grid.py.ipynb",
     resources:
-        mem_mb=50000, # TODO: Find out how much this rule needs,
+        mem_mb=50000,  # TODO: Find out how much this rule needs,
         # should be constant (regional/grid)
-        nodes=12
+        nodes=12,
     params:
         sharedinputpath=shared_input_path,
     notebook:
@@ -405,7 +414,9 @@ rule build_hydro_capfac:
         vannkraft="resources/Vannkraftverk.csv",
         hydroinstalledcap="resources/hydro_installed_cap.tsv",
     output:
-        hydrororcapfac=temp(modelpathyearonly / "capacity-factors_hydro_norway-3_{year}.csv"),
+        hydrororcapfac=temp(
+            modelpathyearonly / "capacity-factors_hydro_norway-3_{year}.csv"
+        ),
         hydroresinfl=temp(modelpathyearonly / "inflow_hydro-res_norway-3_{year}.csv"),
     conda:
         "envs/build_hydro_capfac.yml"
@@ -413,6 +424,7 @@ rule build_hydro_capfac:
         sharedinputpath=shared_input_path,
     notebook:
         "notebooks/highRES_norway3_hydro.py.ipynb"
+
 
 def regionsonlyforgrid(wildcards):
     returndict = {}
@@ -497,11 +509,8 @@ rule link_hydrores_inflow:
         rules.build_hydrores_inflow.output.inflowgdx,
     output:
         inflowgdx=modelpath / "hydro_res_inflow_{year}.gdx",
-    run:
-        # copy instead of link due to missing privileges on windows
-        import shutil
-
-        shutil.copy2(input[1], output[0])
+    shell:
+        "ln -sr {input[1]} {output}"
 
 
 rule build_vre_file:
