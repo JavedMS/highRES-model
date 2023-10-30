@@ -16,3 +16,4 @@ dependencies:
   - shapely <2.0.0
   - pyarrow
   - rioxarray
+  - connectorx
