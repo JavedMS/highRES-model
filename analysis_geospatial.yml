@@ -17,3 +17,5 @@ dependencies:
   - pyarrow
   - rioxarray
   - connectorx
+  - pyarrow
+  - fastparquet

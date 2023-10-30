@@ -12,3 +12,5 @@ dependencies:
   - pandas
   - geopandas
   - connectorx
+  - pyarrow
+  - fastparquet
