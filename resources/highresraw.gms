@@ -70,7 +70,7 @@ $setglobal vre_restrict ""
 $setglobal model_yr "2050"
 $setglobal weather_yr "2010"
 $setglobal dem_yr "2010"
-$setglobal fx_trans "YES"
+$setglobal fx_trans "NO"
 $setglobal fx_natcap "NO"
 
 $set pen_gen "ON"
