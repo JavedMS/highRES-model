@@ -184,7 +184,7 @@ rule extract_wind_cap2area:
     input:
         odsdatabase="resources/highres_gb_ext_database_High.ods",
     output:
-        windcap2area=resultspath + "windcap2area",
+        windcap2area=resultspath / "windcap2area",
     conda:
         "envs/build_windcap2area.yml"
     script:
@@ -285,12 +285,12 @@ rule bias_correct_wind:
         production="resources/bias/TimeSeries_UTC_kWh_2022_all.csv",
         europeshape="resources/bias/Onshore_EU-NUTS0_NO-NUTS3_UK-NG.geojson",
     output:
-        uncorrected=modelpathyearonly + "uncorrected_wind_capacity_factors_{year}.nc",
-        corrected=modelpathyearonly + "corrected_wind_capacity_factors_{year}.nc",
+        uncorrected=modelpathyearonly / "uncorrected_wind_capacity_factors_{year}.nc",
+        corrected=modelpathyearonly / "corrected_wind_capacity_factors_{year}.nc",
         corrected_simple=modelpathyearonly
-        + "corrected_simple_wind_capacity_factors_{year}.nc",
+        / "corrected_simple_wind_capacity_factors_{year}.nc",
         corrected_for_highres=modelpathyearonly
-        + "corrected_wind_capacity_factors_{year}.parquet",
+        / "corrected_wind_capacity_factors_{year}.parquet",
     params:
         corrector_year=CORRECTOR_YEAR,
         num_near_wind_parks=num_near_wind_parks,
@@ -307,7 +307,7 @@ rule build_cutoff:
     input:
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
     output:
-        exclusiontiff=modelpathyearonly + "cf_exclusion_{cutoff_wind}.tif",
+        exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_wind}.tif",
     conda:
         "envs/implement_cutoff.yml"
     notebook:
