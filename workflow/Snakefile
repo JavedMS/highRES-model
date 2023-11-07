@@ -393,7 +393,7 @@ rule build_weather:
         areassolar=temp(modelpath / "areas_norway_grid_solar.csv"),
         areaswindonshore=temp(modelpath / "areas_norway_grid_wind_onshore.csv"),
         areaswindoffshore=temp(modelpath / "areas_norway_grid_wind_offshore.csv"),
-        changedbiaswindcsv=modelpath / "capacity-factors_wind_norway-g_{year}.csv",
+        changedbiaswindcsv=temp(modelpath / "capacity-factors_wind_norway-g_{year}.csv"),
         capfacfile=temp(modelpath / "capacity-factors_solar_norway-g_{year}.csv"),
     conda:
         "envs/build_weather.yml"
