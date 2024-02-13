@@ -24,7 +24,10 @@ values = ["High", "Low"]
 
 solars = ["High", "Low"]
 
-spatials = ["grid", "region"]
+spatials = [
+    "grid",
+    # "region"
+]
 
 cutoffs_wind = [0, 0.15]
 
