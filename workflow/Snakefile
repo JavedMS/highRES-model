@@ -96,7 +96,8 @@ co2target = round(0, 1)
 # gamsfilesha256 = "7c58219c0ab4320c806c0460ebba547c10838313c6a1f10f6e6640aab90a4838"
 # gamsfilesha256 = "9cced6b80dad705f6963e4dee1c48af4b8170d42444bb269b049ea8627d6c0e5"
 # gamsfilesha256 = "686cc7b751384f1f0401289c1da84f8454221b7eb146bf1b65eb5dae2d08c22a"
-gamsfilesha256 = "21a42507bb4c2b9be551a4f35012d1e6645ea3ab401feaee7467c1af88b25c00"
+# gamsfilesha256 = "21a42507bb4c2b9be551a4f35012d1e6645ea3ab401feaee7467c1af88b25c00"
+gamsfilesha256 = "c2664b9bbf178e43b36260c429b21e6eeec6a0f8e8f7c9b6a24b504a4bc8ce25"
 
 CORRECTOR_YEAR = 2019
 num_near_wind_parks = 10
