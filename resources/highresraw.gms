@@ -157,7 +157,7 @@ gen_exist_cap(g)=sum((z,lt),gen_exist_pcap_z(z,g,lt));
 set vre_lim(vre,z,r);
 vre_lim(vre,z,r)=((area(vre,z,r)+exist_vre_cap_r(vre,z,r))>0.);
 
-* Non VRE cap lim to dynamic set, stops Nuclear being built in London
+* Non VRE cap lim to dynamic set, stops Nuclear being built in certain countries (e.g. Austria)
 
 set gen_lim(z,g);
 gen_lim(z,non_vre)=((sum(lt,gen_lim_pcap_z(z,non_vre,lt))+sum(lt,gen_exist_pcap_z(z,non_vre,lt)))>0.);
@@ -235,7 +235,7 @@ gen_varom(non_vre)=gen_fuelcost(non_vre)+gen_emisfac(non_vre)*emis_price+gen_var
 scalar
 pgen /20./;
 
-* Solar marginal
+* Solar marginal - small value necessary to avoid transmission system issue
 
 gen_varom("Solar")=0.001;
 
