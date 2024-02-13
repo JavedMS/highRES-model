@@ -80,9 +80,7 @@ for psys in pscens:
     zones = pd.read_csv(
         # data_root/"zonal_def"/"zones.csv"
         snakemake.input[0]
-    ).loc[
-        :, "zone"
-    ]  # .values
+    ).loc[:, "zone"]  # .values
 
     scen2dd(
         snakemake.output[1],
