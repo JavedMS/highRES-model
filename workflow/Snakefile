@@ -3,7 +3,6 @@
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
 # region:
-# region:
 # snakemake --resources mem_mb=700000 --slurm --default-resources \
 # slurm_account=ec85 runtime=30 mem_mb_per_cpu=1100 cpus_per_task=4 \
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
