@@ -621,12 +621,12 @@ rule run_model:
     input:
         modelpath / "highres.gms",
         modelpath / "cplex.opt",
-        shared_code_path + "highres_data_input.gms",
-        shared_code_path + "highres_hydro.gms",
-        shared_code_path + "highres_results.gms",
-        shared_code_path + "highres_storage_setup.gms",
-        shared_code_path + "highres_storage_uc_setup.gms",
-        shared_code_path + "highres_uc_setup.gms",
+        abs_shared_code_path + "highres_data_input.gms",
+        abs_shared_code_path + "highres_hydro.gms",
+        abs_shared_code_path + "highres_results.gms",
+        abs_shared_code_path + "highres_storage_setup.gms",
+        abs_shared_code_path + "highres_storage_uc_setup.gms",
+        abs_shared_code_path + "highres_uc_setup.gms",
         modelpath / "inputs.finished",
         modelpath / "vre_{year}_.gdx",
     params:
