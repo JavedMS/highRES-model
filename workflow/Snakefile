@@ -505,7 +505,7 @@ rule compress_hydrores_inflow:
     input:
         rules.build_hydrores_inflow.output.inflowgdx,
     output:
-        compressdone=touch(modelpath / "hydrores_inflow_gdx.compressed"),
+        compressdone=touch(modelpathyearonly / "hydrores_inflow_gdx.compressed"),
     shell:
         gamspath + "gdxcopy -V7C -Replace {input}"
 
