@@ -385,8 +385,9 @@ rule build_weather:
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
         #cutoffexclusiontiff=rules.build_cutoff.output.exclusiontiff
     output:
-        # FIXME the file indreg is only necessary when we run on grid cell
-        # currently when we run with region, we create an empty file
+        # FIXME the files indreg and cf_exclusion_{solar,windon,windoff} are
+        # only necessary under some conditions currently when those are not met,
+        # we create an empty file
         # the cleaner solution might be to outsource the creation of that file
         # to an extra rule and have an input function conditional on the
         # wildcard spatial for that rule
