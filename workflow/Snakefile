@@ -166,12 +166,13 @@ localrules:
     build_vre_csv,
     compress_vre_gdx,
     compress_hydrores_inflow,
+    convert_results_db_parquet,
 
 
 rule all:
     input:
         expand(
-            modelpath / "results.gdx",
+            modelpath / "results.db.compressed",
             zip,
             year=years,
             natur=naturs,
@@ -653,10 +654,23 @@ rule convert_results:
     input:
         rules.run_model.output.modelresults,
     output:
-        ensure(protected(modelpath / "results.db"), non_empty=True),
+        resultsdb=ensure(protected(modelpath / "results.db"), non_empty=True),
     shell:
         # TODO platform independence
         gamspath + "gdx2sqlite -i {input} -o {output} -fast"
+
+
+rule convert_results_db_parquet:
+    input:
+        rules.run_model.output.modelresultsdd,
+    output:
+        compressdone=touch(modelpath / "results.db.compressed"),
+    resources:
+        mem_mb=50000,
+    conda:
+        "envs/build_vre_parquet.yml"
+    script:
+        "scripts/convert_results_sqlite_parquet.py"
 
 
 # rule plot_bias_correction:
