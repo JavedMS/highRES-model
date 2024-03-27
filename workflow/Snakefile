@@ -8,8 +8,6 @@
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
 # TODO: Default profile is Fox, HPC, profile
-
-
 configfile: "config/cluster_system_os_config.yaml"
 
 
@@ -18,73 +16,93 @@ import pathlib
 
 import pandas as pd
 
-inputyears = ["1995", "2010"]
-
-values = ["High", "Low"]
-
-solars = ["High", "Low"]
+# Inputs to be used as wildcards. make changes based on the requirement
+inputyears = [
+    #"1995",
+    "2010"
+]
 
 spatials = [
     "grid",
-    # "region"
+    #"region"
 ]
+cutoffs_solar = [0.09]
+cutoffs_onwind = [0.15]
+cutoffs_offwind = [0.20]
 
-cutoffs_wind = [0, 0.15]
+#values = ["High", "Low"]
+#solars = ["High", "Low"]
+#cutoff_values = {"solar": 0.09, "onwind": 0.15, "offwind": 0.20}
+#cutoffs_wind = [0, 0.15]
+#cutoffs_wind = [0.15]
 
-scenarios = (
-    pd.DataFrame(itertools.product(values, repeat=3))
-    .rename(
-        columns={
-            0: "naturs",
-            1: "faunas",
-            2: "samis",
-        }
-    )
-    .assign(neighs="Low")
-    .T.assign(nothing="None", nowind="High")
-    .T.reset_index(drop=True)
-)
+# Use product to create all possible combinations of the values in the lists
+scenarios_product = list(itertools.product(inputyears, spatials, cutoffs_solar,
+                                             cutoffs_onwind, cutoffs_offwind))
+
+# Create the DataFrame from the list of all combinations
+column_names = ['years', 'spatials', 'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
+scenarios = pd.DataFrame(scenarios_product, columns=column_names)
+
+#generating scenarios: six columns with naturs, faunas, samis, neighs, nothing, nowwind
+# scenarios = (
+#     pd.DataFrame(itertools.product(values, repeat=3))
+#     .rename(
+#         columns={
+#             0: "naturs",
+#             1: "faunas",
+#             2: "samis",
+#         }
+#     )
+#     .assign(neighs="Low")
+#     .T.assign(nothing="None", nowind="High")
+#     .T.reset_index(drop=True)
+# )
 
 
-concatlist = []
-for year in inputyears:
-    concatlist.append(scenarios.assign(years=year))
-scenarios = pd.concat(concatlist).reset_index(drop=True)
+# concatinating the scenarios by adding years column [16*7 dataframe]
+# concatlist = []
+# for year in inputyears:
+#     concatlist.append(scenarios.assign(years=year))
+# scenarios = pd.concat(concatlist).reset_index(drop=True)
 
-concatlist = []
-for solar in solars:
-    concatlist.append(scenarios.assign(solars=solar))
-scenarios = pd.concat(concatlist).reset_index(drop=True)
+# # (16*2) * 8 rows
+# concatlist = []
+# for solar in solars:
+#     concatlist.append(scenarios.assign(solars=solar))
+# scenarios = pd.concat(concatlist).reset_index(drop=True)
 
-concatlist = []
-for spatial in spatials:
-    concatlist.append(scenarios.assign(spatials=spatial))
-scenarios = pd.concat(concatlist).reset_index(drop=True)
+# concatlist = []
+# for spatial in spatials:
+#     concatlist.append(scenarios.assign(spatials=spatial))
+# scenarios = pd.concat(concatlist).reset_index(drop=True)
 
-concatlist = []
-for cutoff_wind in cutoffs_wind:
-    concatlist.append(scenarios.assign(cutoffs_wind=cutoff_wind))
-scenarios = pd.concat(concatlist).reset_index(drop=True)
+# #final scenario dataframe: 
+# concatlist = []
+# for cutoff_wind in cutoffs_wind:
+#     concatlist.append(scenarios.assign(cutoffs_wind=cutoff_wind))
+# scenarios = pd.concat(concatlist).reset_index(drop=True)
 
 # to run everything, comment the next line out!
 # scenarios = scenarios.query("neighs=='None' or neighs=='Extreme' or solars=='High'")
 
 # drop pointless cutoff grid scenarios
-scenarios = scenarios.drop(
-    scenarios.query("spatials=='grid' and cutoffs_wind!=0.0").index
-).reset_index()
+#scenarios = scenarios.drop(
+#    scenarios.query("spatials=='grid' and cutoffs_wind!=0.0").index     # limiting the cutoffs_wind list to only 0.15
+#).reset_index()
 
 # droplist = [6,7,2,0,28]
 # scenarios = scenarios.drop(droplist,axis=0)
 
-naturs = scenarios.naturs.to_list()
-faunas = scenarios.faunas.to_list()
-samis = scenarios.samis.to_list()
-neighs = scenarios.neighs.to_list()
+#naturs = scenarios.naturs.to_list()
+#faunas = scenarios.faunas.to_list()
+#samis = scenarios.samis.to_list()
+#neighs = scenarios.neighs.to_list()
 years = scenarios.years.to_list()
-solars = scenarios.solars.to_list()
 spatials = scenarios.spatials.to_list()
-cutoffs_wind = scenarios.cutoffs_wind.to_list()
+cutoffs_solar = scenarios.cutoffs_solar.to_list()
+cutoffs_onwind = scenarios.cutoffs_onwind.to_list()
+cutoffs_offwind = scenarios.cutoffs_offwind.to_list()
 
 # in grams per kWh
 co2target = round(0, 1)
@@ -98,6 +116,7 @@ co2target = round(0, 1)
 # gamsfilesha256 = "686cc7b751384f1f0401289c1da84f8454221b7eb146bf1b65eb5dae2d08c22a"
 # gamsfilesha256 = "21a42507bb4c2b9be551a4f35012d1e6645ea3ab401feaee7467c1af88b25c00"
 gamsfilesha256 = "c2664b9bbf178e43b36260c429b21e6eeec6a0f8e8f7c9b6a24b504a4bc8ce25"
+#gamsfilesha256 = "8760c1dfea64d41adcc75c16a4e0902f076e9f3a4468e455ad1d7fc1094a8a1b"
 
 CORRECTOR_YEAR = 2019
 num_near_wind_parks = 10
@@ -134,7 +153,8 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
-scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
+#scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
+scenariopart = "{year}_{spatial}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
 modelpath = modelpathyearonly / scenariopart
 allyearpath = resultspath / "models/allyears/"
@@ -159,14 +179,14 @@ localrules:
     build_hydrores_inflow,
     link_hydrores_inflow,
     convert_results,
-    bias_correct_wind,
-    extract_wind_cap2area,
-    build_cutoff,
+    bias_correct_wind,      #not in EU version
+    extract_wind_cap2area,  #not in EU version
+    build_cutoff,           #not in EU version
     build_vre_parquet,
     build_vre_csv,
     compress_vre_gdx,
     compress_hydrores_inflow,
-    convert_results_db_parquet,
+    convert_results_db_parquet, #not in EU version
 
 
 rule all:
@@ -174,21 +194,25 @@ rule all:
         expand(
             modelpath / "results.db.compressed",
             zip,
-            year=years,
-            natur=naturs,
-            fauna=faunas,
-            sami=samis,
-            neigh=neighs,
-            solar=solars,
+            year=years,     # these are all wildcards of snakefile
+            #natur=naturs,
+            #fauna=faunas,
+            #sami=samis,
+            #neigh=neighs,
+            #solar=solars,
             spatial=spatials,
-            cutoff_wind=cutoffs_wind,
+            cutoff_solar=cutoffs_solar, 
+            cutoff_onwind=cutoffs_onwind,
+            cutoff_offwind=cutoffs_offwind,
         ),
 
 
 rule extract_wind_cap2area:
     # TODO think about whether we really only should read from the high version
+    # Reading only cap2area parameter from excel file & storing as windcap2area
     input:
         odsdatabase="resources/highres_gb_ext_database_High.ods",
+        #odsdatabase="resources/highres_gb_ext_database_Low.ods",
     output:
         windcap2area=resultspath / "windcap2area",
     conda:
@@ -235,30 +259,44 @@ rule build_cplex_opt:
 rule build_zones_file:
     input:
         "resources/zones.csv",
-        "workflow/scripts/build_zones.py",
+        "workflow/scripts/build_zones.py",  #input/output paths always relative to the terminal 
     output:
         modelpath / "zones.dd",
     script:
-        "scripts/build_zones.py"
+        "scripts/build_zones.py"        #script paths relative to the snakefile path
 
+# where to make changes highres_gb_ext_database_Low for costs...?
+# storage_costs: Li-ion battery, Storage+IDC stands for?,
+# generator_costs: chnages from EU version --> solar, wind onshore, wind offshore, hydroROR, HydroRes and other techs as well.
+# gen: windoffshore is not added. is it excluded from analysis? Added by me in highres_gb_ext_database_Low.ods 
+# transmission allowed: distance and cap btw fylkes 
+# sheets where changes to be made regarding costs: generator_costs (in capex of realted year & technology)...
+# storage_costs: column_N (Storage (£k/MWh)), transmission_costs: (future transmission installation could be contrained based on scenarios)
+# Transmission costs changing need to check further
+# Import as technology used in excel file: its costs/capacities in gen, gen_lim_z, and gen_exist_z are unclear...
+# gen_lim_z: sheet where fixed/upper limit of technologies defined. Windoffshore is fixed to zero currently?? windonshore and solar are not limited
+# gen_exist_z: solar existing capacity is not added currently in technology and need to be added
+# existing capacities of windoffshore, windonshore, and import are there in excel file
 
 rule build_technoeconomic_inputs:
     input:
-        "resources/zones.csv",
+        "resources/zones.csv",          # zones need to change to get related region values from excel files
         "resources/gb_ext_scenarios.xls",
-        "resources/highres_gb_ext_database_{solar}.ods",
+        #"resources/highres_gb_ext_database_{solar}.ods",    #solar wild card used here
+        #"resources/highres_gb_ext_database_Low.ods",
+        "resources/highres_gb_ext_database_High.ods",
         europecountriescsvlocation="resources/europe_countries.csv",
-        europedemandcsvlocation="resources/europe_demand_2006-2015.csv",
+        europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
         data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
         "envs/build_technoeconomic.yml"
     output:
-        modelpath / "{year}_temporal.dd",
-        modelpath / "BASE_co2_budget.dd",
+        modelpath / "{year}_temporal.dd",       # generating hourly temporal resolution
+        modelpath / "BASE_co2_budget.dd",       # non_used file
         modelpath / "BASE_gen.dd",
         modelpath / "BASE_store.dd",
         modelpath / "trans.dd",
-        demandfile=temp(modelpath / "BASE_norescale_demand_{year}.dd"),
+        demandfile=temp(modelpath / "BASE_norescale_demand_{year}.dd"), #only demand of wildcard year
     script:
         "scripts/gb_ext_data2dd.py"
 
@@ -282,11 +320,15 @@ rule build_hydro_areas:
     script:
         "scripts/build_hydro_areas.py"
 
-
+# CF corrected only for onshore data at grid cell level?
+# params impact in corrected CF i.e., num_near_wind_parks?
+# scripts versus notebooks?
 rule bias_correct_wind:
     input:
         era5_corrector=abs_con_path + f"europe-era5_{CORRECTOR_YEAR}.nc",
+        #era5_corrector=f"resources/bias/europe-era5_{CORRECTOR_YEAR}.nc",
         era5=abs_con_path + "europe-era5_{year}.nc",
+        #era5="resources/bias/europe-era5_{year}.nc",
         wind_parks="resources/bias/nve_wind_parks.geojson",
         production="resources/bias/TimeSeries_UTC_kWh_2022_all.csv",
         europeshape="resources/bias/Onshore_EU-NUTS0_NO-NUTS3_UK-NG.geojson",
@@ -302,64 +344,64 @@ rule bias_correct_wind:
         num_near_wind_parks=num_near_wind_parks,
         num_parallel_processes=num_parallel_processes,
     resources:
-        nodes=num_parallel_processes,
+        nodes=num_parallel_processes,       #will be ignored other than cluster plateforms
     conda:
         "envs/environment.yaml"
     script:
         "scripts/bias_correct_wind.py"
 
-
+# excluding all those grid cells having CF less than cut_off
 rule build_cutoff:
     input:
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
     output:
-        exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_wind}.tif",
+        exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_onwind}.tif",
+        #exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_wind}.tif",
+        #exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_onwind}.tif",
+        
     conda:
-        "envs/implement_cutoff.yml"
+        "envs/implement_cutoff.yml",
+    params:
+        cutoff_onwind=cutoff_onwind,    
     notebook:
         "notebooks/build_cutoff_tiff.py.ipynb"
 
 
+# this ensures that if cut_off is zero, no need to run the above rule
 def cutoff_needed(wildcards):
+#def cutoff_needed():
     returndict = {}
-    if wildcards.cutoff_wind != str(0.0):
+    if wildcards.cutoff_onwind != str(0.0):
+    #if cutoff_values["onwind"] != 0.0:
         returndict = {"cutoffexclusiontiff": rules.build_cutoff.output.exclusiontiff}
     return returndict
 
+# can be removed
+# def myfunc(wildcards):
+#     returndict = {}
+#     if wildcards.natur != "None" and wildcards.natur != "Extreme":
+#         returndict[
+#             "naturex"
+#         ] = scenario_exclusions_path + "Natur_{wildcards.natur}_Exc.zip".format(
+#             wildcards=wildcards       # if the condition is met, returning the file path, i.e., {"faunaex": "/path/to/exclusions/Fauna_high_Exc.zip"}
+#         )
+#     if wildcards.neigh != "None" and wildcards.neigh != "Extreme":
+#         returndict[
+#             "neighex"
+#         ] = scenario_exclusions_path + "Neigh_{wildcards.neigh}_Exc.zip".format(
+#             wildcards=wildcards
+#         )
+#     return returndict
 
-def myfunc(wildcards):
-    returndict = {}
-    if wildcards.fauna != "None" and wildcards.fauna != "Extreme":
-        returndict[
-            "faunaex"
-        ] = scenario_exclusions_path + "Fauna_{wildcards.fauna}_Exc.zip".format(
-            wildcards=wildcards
-        )
-    if wildcards.natur != "None" and wildcards.natur != "Extreme":
-        returndict[
-            "naturex"
-        ] = scenario_exclusions_path + "Natur_{wildcards.natur}_Exc.zip".format(
-            wildcards=wildcards
-        )
-    if wildcards.neigh != "None" and wildcards.neigh != "Extreme":
-        returndict[
-            "neighex"
-        ] = scenario_exclusions_path + "Neigh_{wildcards.neigh}_Exc.zip".format(
-            wildcards=wildcards
-        )
-    if wildcards.sami != "None" and wildcards.sami != "Extreme":
-        returndict[
-            "samiex"
-        ] = scenario_exclusions_path + "Sami_{wildcards.sami}_Exc.zip".format(
-            wildcards=wildcards
-        )
-    return returndict
-
+# Further base exclusions I can add are:
+# Tech_All_Exc.zip: related to windonshore only: roads/railway 200m buffer, Airports 2km, watercourses/waterbodies/glaciers exclude
+# Neigh_Low_Exc.zip: related to windonshore only: Buildings buffer 400m, visibility from populated areas 1Km buffer, ski/biking/walking routes 20m buffer
+# Natur_High_Exc.zip: contains unqiue seven IUCN [0-6] numbers, categorizing the protected areas. 0: none IUCN classified areas...
 
 rule build_weather:
     input:
-        unpack(myfunc),
         unpack(cutoff_needed),
+        #unpack(myfunc),
         WDPA1a=shared_input_path / "geodata/onshore/WDPA_Ia_100.tiff",
         WDPA1b=shared_input_path / "geodata/onshore/WDPA_Ib_100.tiff",
         WDPA2=shared_input_path / "geodata/onshore/WDPA_II_100.tiff",
@@ -374,11 +416,12 @@ rule build_weather:
         corine=shared_input_path / "geodata/onshore/corine.tif",
         #cap2area="resources/highres_gb_ext_database_{solar}.ods",
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
-        cap2area=ancient("resources/windcap2area"),
+        cap2area=ancient("resources/windcap2area"),         #it is assumed available already
         wind_parks="resources/bias/nve_wind_parks.geojson",
         pvlow=scenario_exclusions_path + "PV_Low_Exc.zip",
         windlow=scenario_exclusions_path + "co.geotiff",
         tech=scenario_exclusions_path + "Techn_All_Exc.zip",
+        neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
         #faunaex=scenario_exclusions_path + "Fauna_{fauna}_Exc.zip",
         #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
         #neighex=scenario_exclusions_path + "Neigh_{neigh}_Exc.zip",
@@ -386,13 +429,7 @@ rule build_weather:
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
         #cutoffexclusiontiff=rules.build_cutoff.output.exclusiontiff
     output:
-        # FIXME the files indreg and cf_exclusion_{solar,windon,windoff} are
-        # only necessary under some conditions currently when those are not met,
-        # we create an empty file
-        # the cleaner solution might be to outsource the creation of that file
-        # to an extra rule and have an input function conditional on the
-        # wildcard spatial for that rule
-        cf_exclusion_solar=temp(modelpath / "cf_exclusion_solar.tif"),
+        cf_exclusion_solar=temp(modelpath / "cf_exclusion_solar.tif"),  #exclusion only based on CF cutoff
         cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"),
         cf_exclusion_windoff=temp(modelpath / "cf_exclusion_windoff.tif"),
         indreg=temp(modelpath / "indices_region.csv"),
@@ -401,6 +438,12 @@ rule build_weather:
         areaswindoffshore=temp(modelpath / "areas_norway_grid_wind_offshore.csv"),
         changedbiaswindcsv=temp(modelpath / "capacity-factors_wind_norway-g_{year}.csv"),
         capfacfile=temp(modelpath / "capacity-factors_solar_norway-g_{year}.csv"),
+        # FIXME the files indreg and cf_exclusion_{solar,windon,windoff} are
+        # only necessary under some conditions currently when those are not met,
+        # we create an empty file
+        # the cleaner solution might be to outsource the creation of that file
+        # to an extra rule and have an input function conditional on the
+        # wildcard spatial for that rule
     conda:
         "envs/build_weather.yml"
     log:
@@ -411,11 +454,13 @@ rule build_weather:
         nodes=12,
     params:
         sharedinputpath=shared_input_path,
+        #cutoffs=cutoff_values,
     notebook:
         "notebooks/highRES-Norway_grid.py.ipynb"
 
 
 rule build_hydro_capfac:
+# these inputs are not used in notebook, rather directly retrieved using path
     input:
         eiahydrogen="resources/EIA_hydro_generation_1995_2000_2014.csv",
         vannkraft="resources/Vannkraftverk.csv",
@@ -461,46 +506,36 @@ rule build_regions_file:
 
 rule build_vre_areas_file:
     input:
-        #        unpack(build_vre_areas_file_func),
         areashydro=rules.build_hydro_areas.output.areashydro,
+        # unpack(build_vre_areas_file_func),
         areassolar=rules.build_weather.output.areassolar,
         areaswindon=rules.build_weather.output.areaswindonshore,
         areaswindoff=rules.build_weather.output.areaswindoffshore,
         vreareaheader="resources/vre_areas_header.txt",
         genericfooter="resources/generic_footer.txt",
     output:
-        modelpath / "vre_areas_{year}_.dd",
+        modelpath / "vre_areas_{year}_.dd",     #main_file
         unsorted=temp(modelpath / "vre_areas_unsorted.txt"),
         areassorted=temp(modelpath / "vre_areas_sorted.txt"),
     script:
         "scripts/build_vre_areas_file.py"
 
 
-# shell:
-#     # TODO platform independence
-#     (
-#         "cat {input[areashydro]} {input[areassolar]} {input[areaswindon]} "
-#         "{input[areaswindoff]} | sort -g | cat {input[vreareaheader]} - "
-#         "{input[genericfooter]} > {output[0]}"
-#     )
-# """ run:
-#     import shutil
-#     with open('unsorted.txt','wb') as wfd:
-#         for f in [input[areashydro],input[areassolar],input[areaswindon],input[areaswindoff]]:
-#             with open(f,'rb') as fd:
-#                 shutil.copyfileobj(fd, wfd) """
-
 
 rule build_hydrores_inflow:
     input:
-        rules.build_hydro_capfac.output.hydroresinfl,
+        hydroresinfl=rules.build_hydro_capfac.output.hydroresinfl,
     output:
         inflowgdx=modelpathyearonly / "hydro_res_inflow_{year}.gdx",
     shell:
-        gamspath + (
-            "csv2gdx {input} output={output} ID=hydro_inflow "
-            "Index='(1,2,3)' Value='(4)' UseHeader=True StoreZero=True"
-        )
+        """
+        {gamspath} csv2gdx {input.hydroresinfl} output={output.inflowgdx} ID=hydro_inflow
+        Index='(1,2,3)' Value='(4)' UseHeader=True StoreZero=True
+        """
+        #gamspath + (
+        #    "csv2gdx {input} output={output} ID=hydro_inflow "
+        #    "Index='(1,2,3)' Value='(4)' UseHeader=True StoreZero=True"
+        #)
 
 
 rule compress_hydrores_inflow:
@@ -517,16 +552,16 @@ rule link_hydrores_inflow:
         rules.compress_hydrores_inflow.output.compressdone,
         rules.build_hydrores_inflow.output.inflowgdx,
     output:
-        inflowgdx=modelpath / "hydro_res_inflow_{year}.gdx",
+        inflowgdx=modelpath / "hydro_res_inflow_{year}.gdx",    #shifting hydro_res_inlfow from modelpathyearonly path to modelpath.
     shell:
         "ln -sr {input[1]} {output}"
 
-
+# vre_file contains: windon, windoff, solar, and hydroror CF.
 rule build_vre_file:
     input:
-        cfwsng=rules.build_weather.output.capfacfile,
+        cfwsng=rules.build_weather.output.capfacfile,       #contains solar and windoffshore CF
         cfhn3=rules.build_hydro_capfac.output.hydrororcapfac,
-        changedbiaswindcsv=rules.build_weather.output.changedbiaswindcsv,
+        changedbiaswindcsv=rules.build_weather.output.changedbiaswindcsv,   #contains corrected windonshore CF
     output:
         vrefile=temp(modelpath / "vre_{year}_.csv"),
     shell:
@@ -564,7 +599,6 @@ rule build_vre_gdx:
     output:
         bigvregdx=temp(modelpath / "vre_{year}_.gdx"),
     shell:
-        # TODO platform independence
         gamspath + (
             "csv2gdx {input} output={output} ID=vre_gen Index='(1,2,3)'"
             " Value='(4)' UseHeader=True StoreZero=True"
@@ -646,7 +680,6 @@ rule run_model:
         modelresults=protected(modelpath / "results.gdx"),
         modelresultsdd=protected(modelpath / "results.db"),
     script:
-        # TODO platform independence
         "scripts/run_gams.sh"
 
 
@@ -656,7 +689,6 @@ rule convert_results:
     output:
         resultsdb=ensure(protected(modelpath / "results.db"), non_empty=True),
     shell:
-        # TODO platform independence
         gamspath + "gdx2sqlite -i {input} -o {output} -fast"
 
 

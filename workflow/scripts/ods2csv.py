@@ -264,7 +264,7 @@ def storage_costs_forumlas(df_input, config = None):
             df_input.loc["PumpedHydro":"CAES (underground)", "NCAP_COST~2050"] * 
             (df_input.loc["PumpedHydro":"CAES (underground)", "Storage"] * df_input.loc["PumpedHydro":"CAES (underground)", "Discharge Time"] / 
              (df_input.loc["PumpedHydro":"CAES (underground)", "PCS"] + df_input.loc["PumpedHydro":"CAES (underground)", "Storage"] * 
-              df_input.loc["PumpedHydro":"CAES (underground)", "Discharge Time"])) / df_input.loc["PumpedHydro":"CAES (underground)", "Discharge Time"] 
+              df_input.loc["PumpedHydro":"CAES (underground)", "Discharge Time"])) / df_input.loc["PumpedHydro":"CAES (underground)", "Discharge Time"]) 
 
     # Storage+IDC, P, FV formula
     technologies = ["Li-ion",

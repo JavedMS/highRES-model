@@ -6,7 +6,7 @@ import pandas as pd
 
 from data2dd_funcs import euro_demand2dd, scen2dd, temporal2dd, trans_links
 
-root = pathlib.Path(snakemake.output[0]).parent
+root = pathlib.Path(snakemake.output[0]).parent     #TO extract the root/parent directory of output
 data_root = root
 out = pathlib.Path(".")
 

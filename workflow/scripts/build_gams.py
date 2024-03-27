@@ -14,6 +14,7 @@ def build_gams(year):
     ] = f'$setglobal codefolderpath "{snakemake.params.sharedcodepath}"\n'
     list_of_lines[70] = f'$setglobal weather_yr "{year}"\n'
     list_of_lines[71] = f'$setglobal dem_yr "{year}"\n'
+    #\n is not included below becasue line still continues
     list_of_lines[
         636
     ] = f"sum((z,h)$(hr2yr_map(yr,h)),demand(z,h))*{snakemake.params.co2intensity}"
