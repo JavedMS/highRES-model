@@ -208,7 +208,7 @@ rule all:
 
 
 rule extract_wind_cap2area:
-    # TODO think about whether we really only should read from the high version
+# TODO think about whether we really only should read from the high version
     # Reading only cap2area parameter from excel file & storing as windcap2area
     input:
         odsdatabase="resources/highres_gb_ext_database_High.ods",
@@ -225,10 +225,10 @@ rule ensure_gams_template:
     input:
         "resources/highresraw.gms",
     output:
-        gamsfile=ensure(resultspath / "highres.gms", sha256=gamsfilesha256),
+        gamsfile=ensure(resultspath / "highres.gms", sha256=gamsfilesha256),  
     run:
         import shutil
-
+        
         shutil.copy2(input[0], output[0])
 
 
@@ -252,14 +252,14 @@ rule build_cplex_opt:
         modelpath / "cplex.opt",
     run:
         import shutil
-
+        
         shutil.copy2(input[0], output[0])
 
 
 rule build_zones_file:
     input:
         "resources/zones.csv",
-        "workflow/scripts/build_zones.py",  #input/output paths always relative to the terminal 
+        "workflow/scripts/build_zones.py",  #input/output paths always relative to the terminal
     output:
         modelpath / "zones.dd",
     script:
@@ -289,7 +289,7 @@ rule build_technoeconomic_inputs:
         europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
         data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
-        "envs/build_technoeconomic.yml"
+        "envs/build_technoeconomic.yml",
     output:
         modelpath / "{year}_temporal.dd",       # generating hourly temporal resolution
         modelpath / "BASE_co2_budget.dd",       # non_used file
@@ -346,7 +346,7 @@ rule bias_correct_wind:
     resources:
         nodes=num_parallel_processes,       #will be ignored other than cluster plateforms
     conda:
-        "envs/environment.yaml"
+        "envs/environment.yaml",
     script:
         "scripts/bias_correct_wind.py"
 
@@ -361,8 +361,8 @@ rule build_cutoff:
         
     conda:
         "envs/implement_cutoff.yml",
-    params:
-        cutoff_onwind=cutoff_onwind,    
+#    params:
+#        cutoff_onwind=cutoff_onwind,    
     notebook:
         "notebooks/build_cutoff_tiff.py.ipynb"
 
