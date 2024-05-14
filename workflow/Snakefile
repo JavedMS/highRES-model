@@ -16,6 +16,9 @@ import pathlib
 
 import pandas as pd
 
+#date_range=["2010-01-01","2010-12-31"]
+date_range=["01-01","06-30"]
+
 # Inputs to be used as wildcards. make changes based on the requirement
 inputyears = [
     #"1995",
@@ -321,6 +324,8 @@ rule build_technoeconomic_inputs:
         modelpath / "BASE_store.dd",
         modelpath / "trans.dd",
         demandfile=temp(modelpath / "BASE_norescale_demand_{year}.dd"), #only demand of wildcard year
+    params:
+        date_range=date_range,
     script:
         "scripts/gb_ext_data2dd.py"
 
@@ -367,6 +372,7 @@ rule bias_correct_wind:
         corrector_year=CORRECTOR_YEAR,
         num_near_wind_parks=num_near_wind_parks,
         num_parallel_processes=num_parallel_processes,
+        date_range=date_range,
     resources:
         nodes=num_parallel_processes,       #will be ignored other than cluster plateforms
     conda:
@@ -479,7 +485,8 @@ rule build_weather:
     params:
         sharedinputpath=shared_input_path,
         corine_solar=lambda wildcards: corine_solar[wildcards.corine_solar],
-        corine_onshorewind=lambda wildcards: corine_onshore[wildcards.corine_onshore]
+        corine_onshorewind=lambda wildcards: corine_onshore[wildcards.corine_onshore],
+        date_range=date_range
         #cutoffs=cutoff_values,
     notebook:
         "notebooks/highRES-Norway_grid.py.ipynb"
@@ -500,6 +507,7 @@ rule build_hydro_capfac:
         "envs/build_hydro_capfac.yml"
     params:
         sharedinputpath=shared_input_path,
+        date_range=date_range,
     notebook:
         "notebooks/highRES_norway3_hydro.py.ipynb"
 

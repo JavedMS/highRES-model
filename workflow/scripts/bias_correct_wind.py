@@ -79,13 +79,28 @@ if __name__ == "__main__":
     ]
     norway_grid.reset_index(inplace=True)
 
-    # Generate the capacity factors.
-    cfs_corrector = cutout_corrector.wind(
-        turbine=turbine, shapes=norway_grid
-    ).to_pandas()
+    # Parameters for limiting the simulation days of the year
+    year = snakemake.wildcards.year
+    date_range=snakemake.params.date_range
+    date_range=[year+"-"+date for date in date_range]
+
+    # Generate the capacity factors. Changes to be made for date_range
+    #cfs_corrector = cutout_corrector.wind(
+    #    turbine=turbine, shapes=norway_grid
+    #).to_pandas()
+
+    cfs_corrector_data = cutout_corrector.wind(turbine=turbine, shapes=norway_grid)
+    cfs_corrector_data = cfs_corrector_data.sel(time=slice(date_range[0], date_range[1]))
+    cfs_corrector = cfs_corrector_data.to_pandas()
+
     cfs_corrector.rename(columns=norway_grid["index"].to_dict(), inplace=True)
 
-    cfs = cutout.wind(turbine=turbine, shapes=norway_grid).to_pandas()
+    #cfs = cutout.wind(turbine=turbine, shapes=norway_grid).to_pandas()
+
+    cfs_data = cutout.wind(turbine=turbine, shapes=norway_grid)
+    cfs_data = cfs_data.sel(time=slice(date_range[0], date_range[1]))
+    cfs = cfs_data.to_pandas()
+
     cfs.rename(columns=norway_grid["index"].to_dict(), inplace=True)
 
     # Load the wind park data (from NVE).
