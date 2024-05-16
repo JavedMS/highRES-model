@@ -8,6 +8,7 @@ with open(snakemake.output.unsorted, "wb") as wfd:
         snakemake.input["areassolar"],
         snakemake.input["areaswindon"],
         snakemake.input["areaswindoff"],
+        snakemake.input["areaswindofffloating"],
     ]:
         with open(f, "rb") as fd:
             shutil.copyfileobj(fd, wfd)
