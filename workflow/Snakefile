@@ -17,7 +17,7 @@ import pathlib
 import pandas as pd
 
 #date_range=["2010-01-01","2010-12-31"]
-date_range=["01-01","06-30"]
+date_range=["01-01","02-28"]
 
 # Inputs to be used as wildcards. make changes based on the requirement
 inputyears = [
@@ -27,8 +27,15 @@ inputyears = [
 
 spatials = [
     "grid",
-    #"region"
+    #"region"    
 ]
+
+trans = [
+    "Default",
+    #"FIXED"
+    #"LOW"
+]
+
 cutoffs_solar = [0.09]
 cutoffs_onwind = [0.15]
 cutoffs_offwind = [0.20]
@@ -59,11 +66,11 @@ corine_onshore_keys = list(corine_onshore.keys())
 #cutoffs_wind = [0.15]
 
 # Use product to create all possible combinations of the values in the lists
-scenarios_product = list(itertools.product(inputyears, spatials,corine_solar_keys, corine_onshore_keys,
+scenarios_product = list(itertools.product(inputyears, spatials, trans, corine_solar_keys, corine_onshore_keys,
                                             cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
 
 # Create the DataFrame from the list of all combinations
-column_names = ['years', 'spatials', 'corines_solar', 'corines_onshore',
+column_names = ['years', 'spatials', 'trans', 'corines_solar', 'corines_onshore',
                 'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
 scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 
@@ -123,6 +130,7 @@ scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 #neighs = scenarios.neighs.to_list()
 years = scenarios.years.to_list()
 spatials = scenarios.spatials.to_list()
+trans = scenarios.trans.to_list()
 corines_solar = scenarios.corines_solar.to_list()
 corines_onshore = scenarios.corines_onshore.to_list() 
 cutoffs_solar = scenarios.cutoffs_solar.to_list()
@@ -179,7 +187,7 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
 #scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
-scenariopart = "{year}_{spatial}_{corine_solar}_{corine_onshore}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
+scenariopart = "{year}_{spatial}_{trans}_{corine_solar}_{corine_onshore}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
 modelpath = modelpathyearonly / scenariopart
 allyearpath = resultspath / "models/allyears/"
@@ -189,6 +197,7 @@ logpath = yearonlypart + scenariopart
 localrules:
     all,
     build_gams,
+    add_transmission_type,
     build_cplex_opt,
     build_technoeconomic_inputs,
     ensure_gams_template,
@@ -226,6 +235,7 @@ rule all:
             #neigh=neighs,
             #solar=solars,
             spatial=spatials,
+            trans=trans,
             corine_solar=corines_solar,
             corine_onshore=corines_onshore,
             cutoff_solar=cutoffs_solar, 
@@ -266,9 +276,18 @@ rule build_gams:
         co2intensity=co2target,
         sharedcodepath=abs_shared_code_path,
     output:
-        modelpath / "highres.gms",
+        gamsfile2=modelpath / "highres1.gms",
     script:
         "scripts/build_gams.py"
+
+
+rule add_transmission_type:
+    input:
+        rules.build_gams.output.gamsfile2,
+    output:
+        modelpath / "highres2.gms",
+    script:
+        "scripts/build_transmission.py"
 
 
 rule build_cplex_opt:
@@ -672,7 +691,7 @@ rule compress_vre_gdx:
 
 rule build_inputs:
     input:
-        modelpath / "highres.gms",
+        modelpath / "highres2.gms",
         modelpath / "cplex.opt",
         abs_shared_code_path + "highres_data_input.gms",
         abs_shared_code_path + "highres_hydro.gms",
@@ -698,7 +717,7 @@ rule build_inputs:
 
 rule run_model:
     input:
-        modelpath / "highres.gms",
+        modelpath / "highres2.gms",
         modelpath / "cplex.opt",
         abs_shared_code_path + "highres_data_input.gms",
         abs_shared_code_path + "highres_hydro.gms",
