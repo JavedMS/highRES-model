@@ -9,4 +9,4 @@ paths:
   #abs_con: /fp/projects01/ec85/cluster/EFF/bias_wind/
   abs_con: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/koenandaleksera5/
   #resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/resultscosts/
-  resultsdir: results
+  resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF

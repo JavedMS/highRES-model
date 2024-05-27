@@ -17,7 +17,7 @@ import pathlib
 import pandas as pd
 
 #date_range=["2010-01-01","2010-12-31"]
-date_range=["01-01","02-28"]
+date_range=["01-01","06-30"]
 
 # Inputs to be used as wildcards. make changes based on the requirement
 inputyears = [
@@ -26,14 +26,15 @@ inputyears = [
 ]
 
 spatials = [
-    "grid",
-    #"region"    
+    #"grid",
+    "region"    
 ]
 
 trans = [
-    "Default",
-    #"FIXED"
-    #"LOW"
+    #"DefaultYes",
+    #"DefaultNO",
+    "FIXEDOH",
+    #"LOW_OH"
 ]
 
 cutoffs_solar = [0.09]
@@ -481,7 +482,7 @@ rule build_weather:
         #cutoffexclusiontiff=rules.build_cutoff.output.exclusiontiff
     output:
         cf_exclusion_solar=temp(modelpath / "cf_exclusion_solar.tif"),  #exclusion only based on CF cutoff
-        cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"), #Could be removed
+        #cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"), #Could be removed
         cf_exclusion_windoff=temp(modelpath / "cf_exclusion_windoff.tif"),
         cf_exclusion_windoff_floating=temp(modelpath / "cf_exclusion_windoff_floating.tif"),
         indreg=temp(modelpath / "indices_region.csv"),
@@ -732,8 +733,8 @@ rule run_model:
         modelpath=str(modelpath),
     # retries: 3
     log:
-        str(modelpath) + "/highres.lst",
-        str(modelpath) + "/highres.log",
+        str(modelpath) + "/highres2.lst",
+        str(modelpath) + "/highres2.log",
     output:
         modelresults=protected(modelpath / "results.gdx"),
         modelresultsdd=protected(modelpath / "results.db"),
