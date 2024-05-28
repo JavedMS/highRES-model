@@ -74,7 +74,7 @@ scalar hydro_res_initial_fill /0.8/;
 
 * minimum reservoir level
 
-scalar hydro_res_min /0.5/;
+* scalar hydro_res_min /0.5/;
 
 * set hydro inflow
 
@@ -82,7 +82,7 @@ var_hydro_in.FX(h,z,hydro_res)$(gen_lim(z,hydro_res))=hydro_inflow(h,z,hydro_res
 
 * set minimum reservoir level to be 50%
 
-var_hydro_level.LO(h,z,hydro_res)$(gen_lim(z,hydro_res))=var_exist_hydro_ecap_z.L(z,hydro_res)*hydro_res_min;
+var_hydro_level.LO(h,z,hydro_res)$(gen_lim(z,hydro_res))=var_exist_hydro_ecap_z.L(z,hydro_res)*%hydro_res_min%;
 
 * set final reservoir level equal to starting level
 

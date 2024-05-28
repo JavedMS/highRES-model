@@ -21,5 +21,11 @@ def build_gams(year):
     with open(snakemake.output[0], "w", encoding="utf8") as file:
         file.writelines(list_of_lines)
 
+#    with open(snakemake.input[1], "r", encoding="utf8") as file:
+#        list_of_lines = file.readlines()
+#    list_of_lines[76] =  'scalar hydro_res_min /0.2/;'+"\n"
+#
+#    with open(snakemake.output[1], "w", encoding="utf8") as file:
+#        file.writelines(list_of_lines)
 
 build_gams(snakemake.wildcards.year)

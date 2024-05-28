@@ -155,6 +155,7 @@ gamsfilesha256 = "c2664b9bbf178e43b36260c429b21e6eeec6a0f8e8f7c9b6a24b504a4bc8ce
 CORRECTOR_YEAR = 2019
 num_near_wind_parks = 10
 num_parallel_processes = 64
+hydro_res_min = 0.2
 
 # Absolute path to your GAMS installation
 gamspath = config["paths"]["gams"]
@@ -731,6 +732,7 @@ rule run_model:
     params:
         gamspath=gamspath,
         modelpath=str(modelpath),
+        hydroresmin=hydro_res_min,
     # retries: 3
     log:
         str(modelpath) + "/highres2.lst",
