@@ -68,7 +68,7 @@ parameter demand(z,h);
 scalar co2_budget;
 
 
-$INCLUDE %datafolderpath%/%psys_scen%_gen.dd
+$INCLUDE %datafolderpath%/%psys_scen%_gen_final.dd
 $INCLUDE %datafolderpath%/trans.dd
 $INCLUDE %datafolderpath%/%esys_scen%_co2_budget.dd
 

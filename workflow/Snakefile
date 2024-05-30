@@ -37,11 +37,16 @@ trans = [
     #"LOW_OH"
 ]
 
+import_xxx = [
+    1,
+    2,
+    #3,
+] 
 cutoffs_solar = [0.09]
 cutoffs_onwind = [0.15]
 cutoffs_offwind = [0.20]
 
-# CORINE solar scenarios
+# CORINE solar scenarios for invert=True
 corine_solar = {
     'CSL': [1, 3, 7, 8, 9, 26, 27, 28, 29, 30, 31, 32, 33],
     #'CSH': [1, 3, 7, 8, 9, 26, 27, 28, 29, 30],
@@ -50,7 +55,7 @@ corine_solar = {
 # Create the list of keys representing CORINE codes
 corine_solar_keys = list(corine_solar.keys())
 
-# CORINE onshore_wind scenarios
+# CORINE onshore_wind scenarios for invert=True
 corine_onshore = {
     'CWL': [1, 2, 6, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
             24 ,25, 26, 27, 28, 29, 30, 31, 32, 33, 42, 43, 44],
@@ -60,19 +65,29 @@ corine_onshore = {
 # Create the list of keys representing CORINE codes
 corine_onshore_keys = list(corine_onshore.keys())
 
+Nibio_solar = {
+    'NSL': ['10', '20', '30', '50', '60'],
+    #'NSH': ['10', '20', '30', '50', '60', '99'],
+}
+Nibio_solar_keys = list(Nibio_solar.keys())
+
+Nibio_onwind = {
+    'NWL': ['10', '20', '30', '50', '60'],
+    #'NWH': ['10', '20', '30', '50', '60', '99'],
+}
+Nibio_onwind_keys = list(Nibio_onwind.keys())
 #values = ["High", "Low"]
 #solars = ["High", "Low"]
 #cutoff_values = {"solar": 0.09, "onwind": 0.15, "offwind": 0.20}
-#cutoffs_wind = [0, 0.15]
-#cutoffs_wind = [0.15]
+
 
 # Use product to create all possible combinations of the values in the lists
-scenarios_product = list(itertools.product(inputyears, spatials, trans, corine_solar_keys, corine_onshore_keys,
-                                            cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
+scenarios_product = list(itertools.product(inputyears, spatials, trans, import_xxx, corine_solar_keys, corine_onshore_keys,
+                                            Nibio_solar_keys, Nibio_onwind_keys, cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
 
 # Create the DataFrame from the list of all combinations
-column_names = ['years', 'spatials', 'trans', 'corines_solar', 'corines_onshore',
-                'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
+column_names = ['years', 'spatials', 'trans', 'import_xxx', 'corines_solar', 'corines_onshore',
+                'Nibios_solar', 'Nibios_onwind', 'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
 scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 
 #generating scenarios: six columns with naturs, faunas, samis, neighs, nothing, nowwind
@@ -132,8 +147,11 @@ scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 years = scenarios.years.to_list()
 spatials = scenarios.spatials.to_list()
 trans = scenarios.trans.to_list()
+import_xxx = scenarios.import_xxx.to_list()
 corines_solar = scenarios.corines_solar.to_list()
 corines_onshore = scenarios.corines_onshore.to_list() 
+Nibios_solar = scenarios.Nibios_solar.to_list()
+Nibios_onwind = scenarios.Nibios_onwind.to_list()
 cutoffs_solar = scenarios.cutoffs_solar.to_list()
 cutoffs_onwind = scenarios.cutoffs_onwind.to_list()
 cutoffs_offwind = scenarios.cutoffs_offwind.to_list()
@@ -189,7 +207,8 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
 #scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
-scenariopart = "{year}_{spatial}_{trans}_{corine_solar}_{corine_onshore}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
+scenariopart = "{year}_{spatial}_{trans}_{importx}_{corine_solar}_{corine_onshore}_" + \
+                "{Nibio_solar}_{Nibio_onwind}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
 modelpath = modelpathyearonly / scenariopart
 allyearpath = resultspath / "models/allyears/"
@@ -202,6 +221,7 @@ localrules:
     add_transmission_type,
     build_cplex_opt,
     build_technoeconomic_inputs,
+    import_input_changes,
     ensure_gams_template,
     rename_demand_file,
     build_regions_file,
@@ -238,8 +258,11 @@ rule all:
             #solar=solars,
             spatial=spatials,
             trans=trans,
+            importx=import_xxx,
             corine_solar=corines_solar,
             corine_onshore=corines_onshore,
+            Nibio_solar=Nibios_solar,
+            Nibio_onwind=Nibios_onwind,
             cutoff_solar=cutoffs_solar, 
             cutoff_onwind=cutoffs_onwind,
             cutoff_offwind=cutoffs_offwind,
@@ -341,19 +364,32 @@ rule build_technoeconomic_inputs:
     output:
         modelpath / "{year}_temporal.dd",       # generating hourly temporal resolution
         modelpath / "BASE_co2_budget.dd",       # non_used file
-        modelpath / "BASE_gen.dd",
+        #BASEgendd=modelpath / "BASE_gen.dd",
         modelpath / "BASE_store.dd",
         modelpath / "trans.dd",
         demandfile=temp(modelpath / "BASE_norescale_demand_{year}.dd"), #only demand of wildcard year
+        BASEgendd=modelpath / "BASE_gen.dd",
     params:
         date_range=date_range,
     script:
         "scripts/gb_ext_data2dd.py"
 
 
+rule import_input_changes:
+    input:
+        rules.build_technoeconomic_inputs.output.BASEgendd,
+    output:
+        BASEgennewdd=modelpath / "BASE_gen_final.dd",
+        #touch(modelpath / "import_input_changes.finished"),
+    params:
+        ImportX=lambda wildcards: float(wildcards.importx),
+    script:
+        "scripts/import_input_change.py"
+
 rule rename_demand_file:
     input:
         rules.build_technoeconomic_inputs.output.demandfile,
+        #modelpath / "import_input_changes.finished",
     output:
         modelpath / "BASE_demand_{year}.dd",
     run:
@@ -473,6 +509,7 @@ rule build_weather:
         wind_parks="resources/bias/nve_wind_parks.geojson",
         pvlow=scenario_exclusions_path + "PV_Low_Exc.zip",
         windlow=scenario_exclusions_path + "co.geotiff",
+        AR250=scenario_exclusions_path + "0000_ar250_25833_gdb.gdb",
         #tech=scenario_exclusions_path + "Techn_All_Exc.zip",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
         #faunaex=scenario_exclusions_path + "Fauna_{fauna}_Exc.zip",
@@ -511,6 +548,8 @@ rule build_weather:
         sharedinputpath=shared_input_path,
         corine_solar=lambda wildcards: corine_solar[wildcards.corine_solar],
         corine_onshorewind=lambda wildcards: corine_onshore[wildcards.corine_onshore],
+        Nibio_solar=lambda wildcards: Nibio_solar[wildcards.Nibio_solar],
+        Nibio_onshorewind=lambda wildcards: Nibio_onwind[wildcards.Nibio_onwind],
         date_range=date_range
         #cutoffs=cutoff_values,
     notebook:
@@ -710,7 +749,8 @@ rule build_inputs:
         modelpath / "vre_{year}_.gdx",
         modelpath / "hydro_res_inflow_{year}.gdx",
         modelpath / "BASE_co2_budget.dd",
-        modelpath / "BASE_gen.dd",
+        #modelpath / "BASE_gen.dd",
+        rules.import_input_changes.output.BASEgennewdd,
         modelpath / "BASE_store.dd",
         modelpath / "trans.dd",
     output:
