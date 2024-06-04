@@ -20,9 +20,15 @@ import pandas as pd
 date_range=["01-01","06-30"]
 
 # Inputs to be used as wildcards. make changes based on the requirement
-inputyears = [
+weatheryears = [
     #"1995",
     "2010"
+]
+
+demandyears = [
+    #"2030",
+    #"2040",
+    "2050"
 ]
 
 spatials = [
@@ -46,7 +52,7 @@ import_xxx = [
 # [Solar, Windonshore, Windoffshore, Windoffshorefloating],
 varnewpcapQ = {
     'OPT': [1, 1, 1, 1],    #Scenario to freely optimize the newpcap. didnot change OPT name itself
-    'QS1': [0.25, 0.25, 0.25, 0.25],
+    #'QS1': [0.25, 0.25, 0.25, 0.25],
     #'QS2': [0.15, 0.4, 0.25, 0.20],
 } 
 varnewpcapQ_keys = list (varnewpcapQ.keys())
@@ -91,12 +97,12 @@ Nibio_onwind_keys = list(Nibio_onwind.keys())
 
 
 # Use product to create all possible combinations of the values in the lists
-scenarios_product = list(itertools.product(inputyears, spatials, trans, import_xxx, varnewpcapQ_keys, corine_solar_keys,
+scenarios_product = list(itertools.product(weatheryears, demandyears, spatials, trans, import_xxx, varnewpcapQ_keys, corine_solar_keys,
                             corine_onshore_keys, Nibio_solar_keys, Nibio_onwind_keys, cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
 
 # Create the DataFrame from the list of all combinations
-column_names = ['years', 'spatials', 'trans', 'import_xxx', 'varnewpcapQ', 'corines_solar', 'corines_onshore',
-                'Nibios_solar', 'Nibios_onwind', 'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
+column_names = ['weatheryears', 'demandyears', 'spatials', 'trans', 'import_xxx', 'varnewpcapQ', 'corines_solar',
+                'corines_onshore','Nibios_solar', 'Nibios_onwind', 'cutoffs_solar', 'cutoffs_onwind', 'cutoffs_offwind']
 scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 
 #generating scenarios: six columns with naturs, faunas, samis, neighs, nothing, nowwind
@@ -153,7 +159,8 @@ scenarios = pd.DataFrame(scenarios_product, columns=column_names)
 #faunas = scenarios.faunas.to_list()
 #samis = scenarios.samis.to_list()
 #neighs = scenarios.neighs.to_list()
-years = scenarios.years.to_list()
+weatheryear = scenarios.weatheryears.to_list()
+demandyear = scenarios.demandyears.to_list()
 spatials = scenarios.spatials.to_list()
 trans = scenarios.trans.to_list()
 import_xxx = scenarios.import_xxx.to_list()
@@ -217,7 +224,7 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
 #scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
-scenariopart = "{year}_{spatial}_{trans}_{importx}_{varnewpcapQ}_{corine_solar}_{corine_onshore}_" + \
+scenariopart = "{year}_{dem_yr}_{spatial}_{trans}_{importx}_{varnewpcapQ}_{corine_solar}_{corine_onshore}_" + \
                 "{Nibio_solar}_{Nibio_onwind}_{cutoff_solar}_{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
 modelpath = modelpathyearonly / scenariopart
@@ -260,7 +267,8 @@ rule all:
         expand(
             modelpath / "results.db.compressed",
             zip,
-            year=years,     # these are all wildcards of snakefile
+            year=weatheryear,     # these are all wildcards of snakefile
+            dem_yr=demandyear,
             #natur=naturs,
             #fauna=faunas,
             #sami=samis,
@@ -370,7 +378,8 @@ rule build_technoeconomic_inputs:
         "resources/highres_gb_ext_database_Low.ods",
         #"resources/highres_gb_ext_database_High.ods",
         europecountriescsvlocation="resources/europe_countries.csv",
-        europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
+        #europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
+        europedemandcsvlocation=abs_con_path + "europe_demand_{dem_yr}.csv",
         data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
         "envs/build_technoeconomic.yml",
