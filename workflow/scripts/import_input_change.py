@@ -3,7 +3,7 @@ Change import capacities in BASE_gen.dd file
 """
 
 
-def import_input_change(importx):
+def import_input_change(Importx):
 
     with open(snakemake.input[0], "r", encoding="utf8") as file:
         list_of_lines = file.readlines()
@@ -14,9 +14,21 @@ def import_input_change(importx):
             parts = line.split()
             # Ensure that the line is correctly formatted with an expected identifier
             if len(parts) >= 2 and (parts[0].endswith('.Import.UP') or parts[0].endswith('.Import.FX')):
-                # Convert the current value to float and multiply by importx
+                # Convert the current value to float and multiply by Importx
                 value = float(parts[-1])
-                new_value = value * importx
+                new_value = value * Importx
+                # Reconstruct the line with the new value
+                list_of_lines[line_number] = f'{parts[0]} {new_value}\n'
+
+    # Modifying all lines containing 'Export.UP/.FX'
+    for line_number, line in enumerate(list_of_lines):
+        if '.Export.UP' in line or '.Export.FX' in line:
+            parts = line.split()
+            # Ensure that the line is correctly formatted with an expected identifier
+            if len(parts) >= 2 and (parts[0].endswith('.Export.UP') or parts[0].endswith('.Export.FX')):
+                # Convert the current value to float and multiply by Exportx
+                value = float(parts[-1])
+                new_value = value * Importx
                 # Reconstruct the line with the new value
                 list_of_lines[line_number] = f'{parts[0]} {new_value}\n'         
 
