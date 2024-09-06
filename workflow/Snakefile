@@ -1,6 +1,6 @@
 # grid:
 # snakemake --rerun-incomplete --resources mem_mb=84000 --executor slurm --default-resources \ 
-# slurm_account=ec85 runtime=3840 mem_mb_per_cpu=21000 cpus_per_task=12  \
+# slurm_account=ec85 runtime=5760 mem_mb_per_cpu=21000 cpus_per_task=5  \
 # --use-conda --keep-going -j unlimited
 
 
@@ -30,13 +30,13 @@ weatheryears = [
 
 demandyears = [
     "2030",
-    #"2040",
+    "2040",
     "2050"
 ]
 
 spatials = [
-    "grid",
-    #"region"    
+    #"grid",
+    "region"    
 ]
 
 trans = [
@@ -48,7 +48,7 @@ trans = [
 
 import_xxx = [
     0,
-    #1,
+    1,
     2,
     #3,
     5,
@@ -334,7 +334,8 @@ rule add_transmission_type:
     script:
         "scripts/build_transmission.py"
 
-
+#epgap 0.001
+#barepcomp 1e-5
 rule build_cplex_opt:
     input:
         "resources/cplex.opt",
@@ -409,7 +410,6 @@ rule import_export_changes:
 rule rename_demand_file:
     input:
         rules.build_technoeconomic_inputs.output.demandfile,
-        #modelpath / "import_input_changes.finished",
     output:
         modelpath / "BASE_demand_{year}.dd",
     run:
@@ -532,10 +532,7 @@ rule build_weather:
         AR250=scenario_exclusions_path + "0000_ar250_25833_gdb.gdb",
         #tech=scenario_exclusions_path + "Techn_All_Exc.zip",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
-        #faunaex=scenario_exclusions_path + "Fauna_{fauna}_Exc.zip",
         #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
-        #neighex=scenario_exclusions_path + "Neigh_{neigh}_Exc.zip",
-        #samiex=scenario_exclusions_path + "Sami_{sami}_Exc.zip",
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
         #cutoffexclusiontiff=rules.build_cutoff.output.exclusiontiff
     output:
@@ -549,7 +546,7 @@ rule build_weather:
         areaswindoffshore=temp(modelpath / "areas_norway_grid_wind_offshore.csv"),
         areaswindoffshorefloating=temp(modelpath / "areas_norway_grid_wind_offshore_floating.csv"),
         changedbiaswindcsv=temp(modelpath / "capacity-factors_wind_norway-g_{year}.csv"),
-        capfacfile_solar=temp(modelpath / "capacity-factors_solar_norway-g_{year}.csv"),
+        #capfacfile_solar=temp(modelpath / "capacity-factors_solar_norway-g_{year}.csv"),
         capfacfile_offshore=temp(modelpath / "capacity-factors_offshore_norway-g_{year}.csv"),
         # FIXME the files indreg and cf_exclusion_{solar,windon,windoff} are
         # only necessary under some conditions currently when those are not met,
@@ -679,7 +676,7 @@ rule link_hydrores_inflow:
 # vre_file contains: windon, windoff, solar, and hydroror CF.
 rule build_vre_file:
     input:
-        cfsng=rules.build_weather.output.capfacfile_solar,       #contains solar and windoffshore CF
+        #cfsng=rules.build_weather.output.capfacfile_solar,       #contains solar CF
         cfwng=rules.build_weather.output.capfacfile_offshore,
         cfhn3=rules.build_hydro_capfac.output.hydrororcapfac,
         changedbiaswindcsv=rules.build_weather.output.changedbiaswindcsv,   #contains corrected windonshore CF
@@ -687,31 +684,31 @@ rule build_vre_file:
         vrefile=temp(modelpath / "vre_{year}_.csv"),
     shell:
         (
-            "cat {input[cfsng]} {input[cfwng]} {input[changedbiaswindcsv]} {input[cfhn3]} | sed 's/bottom//'"
+            "cat {input[cfwng]} {input[changedbiaswindcsv]} {input[cfhn3]} | sed 's/bottom//'"
             " > {output[vrefile]}"
         )
 
 
-#rule build_vre_parquet:
-#    input:
-#        rules.build_vre_file.output.vrefile,
-#    output:
-#        modelpath / "vre_{year}_.parquet",
-#    conda:
-#        "envs/build_vre_parquet.yml"
-#    script:
-#        "scripts/build_vre_parquet.py"
+rule build_vre_parquet:
+    input:
+        rules.build_vre_file.output.vrefile,
+    output:
+        modelpath / "vre_{year}_.parquet",
+    conda:
+        "envs/build_vre_parquet.yml"
+    script:
+        "scripts/build_vre_parquet.py"
 
 
-#rule build_vre_csv:
-#    input:
-#        modelpath / "vre_{year}_.parquet",
-#    output:
-#        csvgdx=temp(modelpath / "vre_{year}_tmp.csv"),
-#    conda:
-#        "envs/build_vre_parquet.yml"
-#    script:
-#        "scripts/build_vre_csv.py"
+rule build_vre_csv:
+    input:
+        modelpath / "vre_{year}_.parquet",
+    output:
+        csvgdx=temp(modelpath / "vre_{year}_tmp.csv"),
+    conda:
+        "envs/build_vre_parquet.yml"
+    script:
+        "scripts/build_vre_csv.py"
 
 
 rule build_vre_gdx:

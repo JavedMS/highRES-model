@@ -1,10 +1,8 @@
 lpmethod 4
 solutiontype 2
-threads 12
+threads 4
 predual -1
 aggind 50
 BarColNZ 150
 barstartalg 3
 BarOrder 3
-epgap 0.001
-barepcomp 1e-5
