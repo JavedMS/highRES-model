@@ -334,8 +334,6 @@ rule add_transmission_type:
     script:
         "scripts/build_transmission.py"
 
-#epgap 0.001
-#barepcomp 1e-5
 rule build_cplex_opt:
     input:
         "resources/cplex.opt",
