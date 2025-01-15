@@ -6,7 +6,7 @@
 
 # region:
 # snakemake --resources mem_mb=700000 --slurm --default-resources \
-# slurm_account=ec85 runtime=30 mem_mb_per_cpu=1100 cpus_per_task=4 \
+# slurm_account=ec85 runtime=30 mem_mb_per_cpu=11000 cpus_per_task=4 \
 # --use-conda --cluster-cancel scancel --keep-going -j unlimited
 
 # TODO: Default profile is Fox, HPC, profile
@@ -43,24 +43,27 @@ trans = [
     "DefaultYes",
     "DefaultNO",
     #"FIXEDOH",
-    "LOWOH"
+    "LOWOH",
+    "Subsurf"   #Constrained value is added with constraint in build_transmission script
 ]
 
 import_xxx = [
-    0,
+#    0,
     1,
     2,
-    #3,
+    3,
+    4,
     5,
     #7,
-    10,
+#    10,
 ]
 
 # [Solar, Windonshore, Windoffshore, Windoffshorefloating],
 # No clear division between offshore & offshore floating. set solar and onshore only and optimize the ratio b/w these two...
 varnewpcapQ = {
     'OPT': [1, 1, 1, 1],    #Scenario to freely optimize the newpcap. didnot change OPT name itself
-    'QS1': [0.245, 0.34, 1, 1],
+    #'QS1': [0.245, 0.34, 1, 1], # Old values based on three schools
+    'QS1': [0.258, 0.235, 1, 1],
     #'QS2': [0.15, 0.4, 0.25, 0.20],
 } 
 varnewpcapQ_keys = list (varnewpcapQ.keys())
@@ -110,10 +113,10 @@ fylke_tech_limit = {
                      "NO50": [1, 1], "NO54": [1, 1], 
                      },
 
-        "fylketechC": {"NO03": (0.1337, 0.01242), "NO11": (0.0842, 0.1242), "NO15": (0.0446, 0.0994),
-                      "NO18": (0.0495, 0.1429), "NO30": (0.1485, 0.0311), "NO34": (0.104, 0.0435),
-                      "NO38": (0.0941, 0.0497), "NO42": (0.1485, 0.04348), "NO46": (0.0693, 0.1491),  
-                      "NO50": (0.0644, 0.1615), "NO54": (0.0594, 0.1429), 
+        "fylketechC": {"NO03": (0.1326, 0.0174), "NO11": (0.0835, 0.1045), "NO15": (0.0492, 0.1098),
+                      "NO18": (0.0477, 0.1167), "NO30": (0.1267, 0.0192), "NO34": (0.1341, 0.0366),
+                      "NO38": (0.0849, 0.0505), "NO42": (0.1550, 0.0662), "NO46": (0.0760, 0.1568),  
+                      "NO50": (0.0566, 0.1707), "NO54": (0.0537, 0.1516), 
                    },
 
 }
