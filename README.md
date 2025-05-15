@@ -18,7 +18,7 @@ This repositry is structure around ``snakemake`` workflow; dependencies are mana
 
 2. Shared input (10.4 GB compressed, 10.8 GB uncompressed) <https://zenodo.org/records/15401853/files/shared_input.zip?download=1>
 
-3. wind_bias_correction (23.7 GB compressed, 35.5 GB uncompressed)
+3. wind_bias_correction (23.7 GB compressed, 35.5 GB uncompressed)<https://zenodo.org/records/15401853/files/wind_bias_correction.zip?download=1>
 
 ## Windows
 
