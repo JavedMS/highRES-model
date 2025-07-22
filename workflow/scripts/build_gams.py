@@ -12,6 +12,7 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     list_of_lines[
         45
     ] = f'$setglobal codefolderpath "{snakemake.params.sharedcodepath}"\n'
+    list_of_lines[50] = '$setglobal gdx2sql "OFF" \n'
     list_of_lines[70] = f'$setglobal weather_yr "{year}"\n'
     list_of_lines[71] = f'$setglobal dem_yr "{year}"\n'
     #\n is not included below becasue line still continues

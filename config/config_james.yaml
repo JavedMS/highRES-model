@@ -1,6 +1,0 @@
-target: inputs.finished
-paths:
-  gams: C:\GAMS\45\
-  shared_input: shared_input/
-  abs_shared_code: ../../../../resources/4_model_code_shared
-  results: C:\science\models\highRES\model_versions\gb_extended\work
