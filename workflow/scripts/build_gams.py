@@ -45,7 +45,8 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     list_of_lines.insert(448, 'eq_vre_new_pcap_w' + "\n")
     list_of_lines.insert(573, 'eq_vre_new_pcap_s(z)$gen_lim(z,"Solar") .. var_new_pcap_z(z, "Solar") =L= par_vre_new_pcap_s(z)*var_new_pcap("Solar");'+"\n")
     list_of_lines.insert(574, "\n")
-    list_of_lines.insert(575, 'eq_vre_new_pcap_w(z)$gen_lim(z,"Windonshore") .. var_new_pcap_z(z, "Windonshore") =L= par_vre_new_pcap_w(z)*var_new_pcap("Windonshore");'+"\n")
+    #list_of_lines.insert(575, 'eq_vre_new_pcap_w(z)$gen_lim(z,"Windonshore") .. var_new_pcap_z(z, "Windonshore") =L= par_vre_new_pcap_w(z)*var_new_pcap("Windonshore");'+"\n")
+    list_of_lines.insert(575,'eq_vre_new_pcap_w(z)$(gen_lim(z,"Windonshore_OF") or gen_lim(z,"Windonshore_F")) .. var_new_pcap_z(z, "Windonshore_OF") + var_new_pcap_z(z, "Windonshore_F") =L= par_vre_new_pcap_w(z)*(var_new_pcap("Windonshore_OF") + var_new_pcap("Windonshore_F"));'+"\n")
     list_of_lines.insert(576, "\n")
 
     # Only add the constraints if enable_fixed_ratios is True:
@@ -54,7 +55,7 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
         list_of_lines.insert(450, 'eq_new_pcap_sub2' + "\n")
         list_of_lines.insert(581, f'eq_new_pcap_sub1 .. var_new_pcap("Solar") =L= {varnewpcapQ[0]} * sum(g, var_new_pcap(g));' + "\n")
         list_of_lines.insert(582, "\n")
-        list_of_lines.insert(583, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore") =L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
+        list_of_lines.insert(583, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore_OF")+var_new_pcap("Windonshore_F")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
         list_of_lines.insert(584, "\n")
 
 

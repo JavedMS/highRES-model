@@ -58,6 +58,17 @@ import_xxx = [
 #    10,
 ]
 
+forest_excls = [
+    #"VRS",
+    #"ECS",
+    #"NLF",
+    #"LLF",
+    #"PEB",
+    #"HRV",
+    "HWE"
+]
+
+
 # [Solar, Windonshore, Windoffshore, Windoffshorefloating],
 # No clear division between offshore & offshore floating. set solar and onshore only and optimize the ratio b/w these two...
 varnewpcapQ = {
@@ -108,12 +119,12 @@ fylke_tech_keys = list(fylke_tech_limit.keys())
 
 
 # Use product to create all possible combinations of the values in the lists
-scenarios_product = list(itertools.product(weatheryears, demandyears, spatials, trans, import_xxx, varnewpcapQ_keys,
-                         corine_solar_keys, corine_onshore_keys, fylke_tech_keys,
+scenarios_product = list(itertools.product(weatheryears, demandyears, spatials, trans, import_xxx, forest_excls, 
+                        varnewpcapQ_keys, corine_solar_keys, corine_onshore_keys, fylke_tech_keys,
                          cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
 
 # Create the DataFrame from the list of all combinations
-column_names = ['weatheryears', 'demandyears', 'spatials', 'trans', 'import_xxx', 'varnewpcapQ', 'corines_solar',
+column_names = ['weatheryears', 'demandyears', 'spatials', 'trans', 'import_xxx', 'forest_excls', 'varnewpcapQ', 'corines_solar',
                 'corines_onshore', 'fylke_techs', 'cutoffs_solar', 'cutoffs_onwind',
                 'cutoffs_offwind']
 scenarios = pd.DataFrame(scenarios_product, columns=column_names)
@@ -147,6 +158,7 @@ demandyear = scenarios.demandyears.to_list()
 spatials = scenarios.spatials.to_list()
 trans = scenarios.trans.to_list()
 import_xxx = scenarios.import_xxx.to_list()
+forest_excls = scenarios.forest_excls.to_list()
 varnewpcapQs = scenarios.varnewpcapQ.to_list()
 corines_solar = scenarios.corines_solar.to_list()
 corines_onshore = scenarios.corines_onshore.to_list() 
@@ -206,7 +218,7 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
 #scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
-scenariopart = "{year}_{dem_yr}_{spatial}_{trans}_{Importx}_{varnewpcapQ}_{corine_solar}_" + \
+scenariopart = "{year}_{dem_yr}_{spatial}_{trans}_{Importx}_{forestexls}_{varnewpcapQ}_{corine_solar}_" + \
                 "{corine_onshore}_{fylke_tech}_{cutoff_solar}_" + \
                  "{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
@@ -255,6 +267,7 @@ rule all:
             spatial=spatials,
             trans=trans,
             Importx=import_xxx,
+            forestexls=forest_excls,
             varnewpcapQ=varnewpcapQs,
             corine_solar=corines_solar,
             corine_onshore=corines_onshore,
@@ -476,7 +489,7 @@ rule build_weather:
         WDPA3=shared_input_path / "geodata/onshore/WDPA_III_100.tiff",
         WDPA4=shared_input_path / "geodata/onshore/WDPA_IV_100.tiff",
         elevation=shared_input_path / "geodata/onshore/2000m.shp.zip",
-        slope=shared_input_path / "geodata/onshore/15degrees.shp.zip",
+        slope=scenario_exclusions_path + "solar_slope_max_6.3deg.tif",
         euroshape=shared_input_path / "geodata/onshore/shapes/NO-NUTS3.geojson",
         eurooffshoreshape=shared_input_path
         / ("geodata/offshore/BOTTOM_MOUNTED_EUROPE_NUTS0" "_NORWAY_NUTS3.geojson"),
@@ -488,7 +501,8 @@ rule build_weather:
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
         cap2area=ancient("resources/windcap2area"),         #it is assumed available already
         wind_parks="resources/bias/nve_wind_parks.geojson",
-        #tech=scenario_exclusions_path + "Techn_All_Exc.zip",
+        OF_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_OF.tif",
+        F_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_F.tif",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
         #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
@@ -500,10 +514,12 @@ rule build_weather:
         cf_exclusion_windoff_floating=temp(modelpath / "cf_exclusion_windoff_floating.tif"),
         indreg=temp(modelpath / "indices_region.csv"),
         areassolar=temp(modelpath / "areas_norway_grid_solar.csv"),
-        areaswindonshore=temp(modelpath / "areas_norway_grid_wind_onshore.csv"),
+        areaswindonshoreOF=temp(modelpath / "areas_norway_grid_wind_onshore_OF.csv"),
+        areaswindonshoreF=temp(modelpath / "areas_norway_grid_wind_onshore_F.csv"),
         areaswindoffshore=temp(modelpath / "areas_norway_grid_wind_offshore.csv"),
         areaswindoffshorefloating=temp(modelpath / "areas_norway_grid_wind_offshore_floating.csv"),
-        changedbiaswindcsv=temp(modelpath / "capacity-factors_wind_norway-g_{year}.csv"),
+        changedbiaswindcsvOF=temp(modelpath / "capacity-factors_windOF_norway-g_{year}.csv"),
+        changedbiaswindcsvF=temp(modelpath / "capacity-factors_windF_norway-g_{year}.csv"),
         #capfacfile_solar=temp(modelpath / "capacity-factors_solar_norway-g_{year}.csv"),
         capfacfile_offshore=temp(modelpath / "capacity-factors_offshore_norway-g_{year}.csv"),
         # FIXME the files indreg and cf_exclusion_{solar,windon,windoff} are
@@ -581,7 +597,8 @@ rule build_vre_areas_file:
         areashydro=rules.build_hydro_areas.output.areashydro,
         # unpack(build_vre_areas_file_func),
         areassolar=rules.build_weather.output.areassolar,
-        areaswindon=rules.build_weather.output.areaswindonshore,
+        areaswindonOF=rules.build_weather.output.areaswindonshoreOF,
+        areaswindonF=rules.build_weather.output.areaswindonshoreF,
         areaswindoff=rules.build_weather.output.areaswindoffshore,
         areaswindofffloating=rules.build_weather.output.areaswindoffshorefloating,
         vreareaheader="resources/vre_areas_header.txt",
@@ -635,12 +652,13 @@ rule build_vre_file:
         #cfsng=rules.build_weather.output.capfacfile_solar,       #contains solar CF
         cfwng=rules.build_weather.output.capfacfile_offshore,
         cfhn3=rules.build_hydro_capfac.output.hydrororcapfac,
-        changedbiaswindcsv=rules.build_weather.output.changedbiaswindcsv,   #contains corrected windonshore CF
+        changedbiaswindcsvOF=rules.build_weather.output.changedbiaswindcsvOF,   #contains corrected windonshore CF
+        changedbiaswindcsvF=rules.build_weather.output.changedbiaswindcsvF
     output:
         vrefile=temp(modelpath / "vre_{year}_.csv"),
     shell:
         (
-            "cat {input[cfwng]} {input[changedbiaswindcsv]} {input[cfhn3]} | sed 's/bottom//'"
+            "cat {input[cfwng]} {input[changedbiaswindcsvOF]} {input[changedbiaswindcsvF]} {input[cfhn3]} | sed 's/bottom//'"
             " > {output[vrefile]}"
         )
 
