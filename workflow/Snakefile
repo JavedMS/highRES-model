@@ -490,11 +490,10 @@ rule build_weather:
         WDPA4=shared_input_path / "geodata/onshore/WDPA_IV_100.tiff",
         elevation=shared_input_path / "geodata/onshore/2000m.shp.zip",
         slope=scenario_exclusions_path + "solar_slope_max_6.3deg.tif",
-        euroshape=shared_input_path / "geodata/onshore/shapes/NO-NUTS3.geojson",
-        eurooffshoreshape=shared_input_path
-        / ("geodata/offshore/BOTTOM_MOUNTED_EUROPE_NUTS0" "_NORWAY_NUTS3.geojson"),
-        eurooffshorefloatingshape=shared_input_path
-        / ("geodata/offshore/FLOATING_EUROPE_NUTS0_NORWAY_NUTS3.geojson"),
+        #euroshape=shared_input_path / "geodata/onshore/shapes/NO-NUTS3.geojson",
+        euroshape="resources/new_counties/NUTS_RG_01M_2024_4326.geojson",
+        eurooffshoreshape="resources/new_counties/norway_offshore_2024.geojson",
+        eurooffshorefloatingshape="resources/new_counties/norway_offshore_floating_2024.geojson",
         weatherdata=shared_input_path / "weatherdata/europe_{year}.nc",
         corine=shared_input_path / "geodata/onshore/corine.tif",
         #cap2area="resources/highres_gb_ext_database_{solar}.ods",
@@ -512,6 +511,7 @@ rule build_weather:
         #cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"), #Could be removed
         cf_exclusion_windoff=temp(modelpath / "cf_exclusion_windoff.tif"),
         cf_exclusion_windoff_floating=temp(modelpath / "cf_exclusion_windoff_floating.tif"),
+        Norway_offshoreshape = temp(modelpath / "windoffshape.geojson"),
         indreg=temp(modelpath / "indices_region.csv"),
         areassolar=temp(modelpath / "areas_norway_grid_solar.csv"),
         areaswindonshoreOF=temp(modelpath / "areas_norway_grid_wind_onshore_OF.csv"),
