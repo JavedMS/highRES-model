@@ -1,9 +1,6 @@
 paths:
   gams: /fp/projects01/ec85/.bin/gams/gams49.4_linux_x64_64_sfx/
   shared_input: /fp/projects01/ec85/shared_input/
-  #shared_input: shared_input/
-  abs_shared_code: /fp/projects01/ec85/models/shahzad/highRES-model/resources/4_model_code_shared/
-  #abs_shared_code: ../../../../resources/4_model_code_shared
-  #abs_con: /cluster/work/projects/ec85/joint-wind/koenandaleksera5/
-  abs_con: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/wind_bias_correction/
-  resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/Forest_work
+  # abs_shared_code: /fp/projects01/ec85/models/shahzad/highRES-model/resources/4_model_code_shared/
+  abs_con: /cluster/work/projects/ec85/EFF/wind_bias_correction/
+  resultsdir: /localscratch/ec-samvind/ 

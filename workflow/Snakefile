@@ -19,6 +19,8 @@ import pathlib
 import pandas as pd
 import json
 
+resource_path = pathlib.Path("/fp/projects01/ec85/resources_SAMVIND")
+
 #date_range=["2010-01-01","2010-12-31"]
 date_range=["01-01","12-31"]
 
@@ -181,16 +183,15 @@ gamspath = config["paths"]["gams"]
 shared_input_path = pathlib.Path(config["paths"]["shared_input"])
 
 # Relative path the model code that is the same across all versions
-# shared_code_path = "resources/4_model_code_shared/"
-abs_shared_code_path = config["paths"]["abs_shared_code"]
-# abs_shared_code_path = workflow.source_path("../resources/4_model_code_shared/")
+# abs_shared_code_path = config["paths"]["abs_shared_code"]
+abs_shared_code_path = str(resource_path) + "/4_model_code_shared/" 
 # TODO: Get this to work, maybe with Pathlib
 
 # Absolute path to the con directory:
 abs_con_path = config["paths"]["abs_con"]
 
 # Relative path to the geodata files that differentiate the scenarios
-scenario_exclusions_path = "resources/scenario_exclusions/"
+scenario_exclusions_path = resource_path / "scenario_exclusions"
 
 # Relative path to the results
 # TODO: Vetle: --directory, flag for å sette results directory?
@@ -269,8 +270,7 @@ rule extract_wind_cap2area:
 # TODO think about whether we really only should read from the high version
     # Reading only cap2area parameter from excel file & storing as windcap2area
     input:
-        #odsdatabase="resources/highres_gb_ext_database_High.ods",
-        odsdatabase="resources/highres_gb_ext_database_Low.ods",
+        odsdatabase= resource_path / "highres_gb_ext_database_Low.ods",
     output:
         windcap2area=resultspath / "windcap2area",
     conda:
@@ -281,7 +281,7 @@ rule extract_wind_cap2area:
 
 rule ensure_gams_template:
     input:
-        "resources/highresraw.gms",
+        resource_path / "highresraw.gms",
     output:
         gamsfile=ensure(resultspath / "highres.gms", sha256=gamsfilesha256),  
     run:
@@ -293,7 +293,6 @@ rule ensure_gams_template:
 rule build_gams:
     input:
         rules.ensure_gams_template.output.gamsfile,
-        #"resources/highres.gms",
     params:
         co2intensity=co2target,
         sharedcodepath=abs_shared_code_path,
@@ -316,8 +315,7 @@ rule add_transmission_type:
 
 rule build_cplex_opt:
     input:
-        "resources/cplex.opt",
-        #ancient("resources/cplex.opt"), # TODO: What does this line do?
+        resource_path / "cplex.opt",
     output:
         modelpath / "cplex.opt",
     run:
@@ -328,7 +326,7 @@ rule build_cplex_opt:
 
 rule build_zones_file:
     input:
-        "resources/zones.csv",
+        resource_path / "zones.csv",
         "workflow/scripts/build_zones.py",  #input/output paths always relative to the terminal
     output:
         modelpath / "zones.dd",
@@ -350,13 +348,10 @@ rule build_zones_file:
 
 rule build_technoeconomic_inputs:
     input:
-        "resources/zones.csv",          # zones need to change to get related region values from excel files
-        "resources/gb_ext_scenarios.xls",
-        #"resources/highres_gb_ext_database_{solar}.ods",    #solar wild card used here
-        "resources/highres_gb_ext_database_Low.ods",
-        #"resources/highres_gb_ext_database_High.ods",
-        europecountriescsvlocation="resources/europe_countries.csv",
-        #europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
+        resource_path / "zones.csv",          # zones need to change to get related region values from excel files
+        resource_path / "gb_ext_scenarios.xls",
+        resource_path / "highres_gb_ext_database_Low.ods",
+        europecountriescsvlocation = resource_path / "europe_countries.csv",
         europedemandcsvlocation=abs_con_path + "Norway_demand_{dem_yr}.csv",
         data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
@@ -398,7 +393,7 @@ rule rename_demand_file:
 
 rule build_hydro_areas:
     input:
-        "resources/zones.csv",
+        resource_path / "zones.csv",
     output:
         areashydro=temp(allyearpath / "available_area.txt"),
     script:
@@ -413,9 +408,9 @@ rule bias_correct_wind:
         #era5_corrector=f"resources/bias/europe-era5_{CORRECTOR_YEAR}.nc",
         era5=abs_con_path + "europe-era5_{year}.nc",
         #era5="resources/bias/europe-era5_{year}.nc",
-        wind_parks="resources/bias/nve_wind_parks.geojson",
-        production="resources/bias/TimeSeries_UTC_kWh_2022_all.csv",
-        europeshape="resources/bias/Onshore_EU-NUTS0_NO-NUTS3_UK-NG.geojson",
+        wind_parks=resource_path / "bias" / "nve_wind_parks.geojson",
+        production=resource_path / "bias" / "TimeSeries_UTC_kWh_2022_all.csv",
+        europeshape=resource_path / "bias" / "Onshore_EU-NUTS0_NO-NUTS3_UK-NG.geojson",
     output:
         uncorrected=modelpathyearonly / "uncorrected_wind_capacity_factors_{year}.nc",
         corrected=modelpathyearonly / "corrected_wind_capacity_factors_{year}.nc",
@@ -486,8 +481,8 @@ rule build_weather:
         corine=shared_input_path / "geodata/onshore/corine.tif",
         #cap2area="resources/highres_gb_ext_database_{solar}.ods",
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
-        cap2area=ancient("resources/windcap2area"),         #it is assumed available already
-        wind_parks="resources/bias/nve_wind_parks.geojson",
+        cap2area=ancient(resource_path / "windcap2area"),         #it is assumed available already
+        wind_parks=resource_path / "bias" / "nve_wind_parks.geojson",
         #tech=scenario_exclusions_path + "Techn_All_Exc.zip",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
         #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
@@ -533,9 +528,9 @@ rule build_weather:
 rule build_hydro_capfac:
 # these inputs are not used in notebook, rather directly retrieved using path
     input:
-        eiahydrogen="resources/EIA_hydro_generation_1995_2000_2014.csv",
-        vannkraft="resources/Vannkraftverk.csv",
-        hydroinstalledcap="resources/hydro_installed_cap.tsv",
+        eiahydrogen= resource_path / "EIA_hydro_generation_1995_2000_2014.csv",
+        vannkraft=resource_path / "Vannkraftverk.csv",
+        hydroinstalledcap=resource_path / "hydro_installed_cap.tsv",
     output:
         hydrororcapfac=temp(
             modelpathyearonly / "capacity-factors_hydro_norway-3_{year}.csv"
@@ -561,7 +556,7 @@ rule build_regions_file:
     input:
         "workflow/scripts/build_regions.py",
         unpack(regionsonlyforgrid),
-        zonescsv="resources/zones.csv",
+        zonescsv=resource_path / "zones.csv",
         #rules.build_weather.output.indreg,
     output:
         regionsdd=modelpath / "_regions.dd",
@@ -584,8 +579,8 @@ rule build_vre_areas_file:
         areaswindon=rules.build_weather.output.areaswindonshore,
         areaswindoff=rules.build_weather.output.areaswindoffshore,
         areaswindofffloating=rules.build_weather.output.areaswindoffshorefloating,
-        vreareaheader="resources/vre_areas_header.txt",
-        genericfooter="resources/generic_footer.txt",
+        vreareaheader= resource_path / "vre_areas_header.txt",
+        genericfooter= resource_path / "generic_footer.txt",
     output:
         modelpath / "vre_areas_{year}_.dd",     #main_file
         unsorted=temp(modelpath / "vre_areas_unsorted.txt"),
