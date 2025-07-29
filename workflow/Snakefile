@@ -59,12 +59,12 @@ import_xxx = [
 ]
 
 forest_excls = [
-    #"VRS",
-    #"ECS",
-    #"NLF",
-    #"LLF",
-    #"PEB",
-    #"HRV",
+    "VRS",
+    "ECS",
+    "NLF",
+    "LLF",
+    "PEB",
+    "HRV",
     "HWE"
 ]
 
@@ -102,10 +102,10 @@ corine_onshore_keys = list(corine_onshore.keys())
 
 # fylke wise technology constraint = (solar, wind)
 fylke_tech_limit = {
-        "fylketechD": {"NO03": [1, 1], "NO11": [1, 1], "NO15": [1, 1],
-                      "NO18": [1, 1], "NO30": [1, 1], "NO34": [1, 1],
-                      "NO38": [1, 1], "NO42": [1, 1], "NO46": [1, 1],  
-                     "NO50": [1, 1], "NO54": [1, 1], 
+        "fylketechD": {"NO020": [1, 1], "NO060": [1, 1], "NO071": [1, 1], "NO072": [1, 1],
+                      "NO073": [1, 1], "NO081": [1, 1], "NO083": [1, 1], "NO084": [1, 1],
+                      "NO085": [1, 1], "NO092": [1, 1], "NO093": [1, 1], "NO094": [1, 1],  
+                     "NO0A1": [1, 1], "NO0A2": [1, 1], "NO0A3": [1, 1], 
                      },
 
         #"fylketechC": {"NO03": (0.1326, 0.0174), "NO11": (0.0835, 0.1045), "NO15": (0.0492, 0.1098),
@@ -370,7 +370,7 @@ rule build_technoeconomic_inputs:
         #"resources/highres_gb_ext_database_High.ods",
         europecountriescsvlocation="resources/europe_countries.csv",
         #europedemandcsvlocation="resources/europe_demand_2006-2015.csv", #nonrescale demand from 1951
-        europedemandcsvlocation=abs_con_path + "Norway_demand_{dem_yr}.csv",
+        europedemandcsvlocation=abs_con_path + "europe_demand_{dem_yr}.csv",
         data2dd="workflow/scripts/data2dd_funcs.py",
     conda:
         "envs/build_technoeconomic.yml",
@@ -511,7 +511,6 @@ rule build_weather:
         #cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"), #Could be removed
         cf_exclusion_windoff=temp(modelpath / "cf_exclusion_windoff.tif"),
         cf_exclusion_windoff_floating=temp(modelpath / "cf_exclusion_windoff_floating.tif"),
-        Norway_offshoreshape = temp(modelpath / "windoffshape.geojson"),
         indreg=temp(modelpath / "indices_region.csv"),
         areassolar=temp(modelpath / "areas_norway_grid_solar.csv"),
         areaswindonshoreOF=temp(modelpath / "areas_norway_grid_wind_onshore_OF.csv"),
@@ -550,8 +549,11 @@ rule build_hydro_capfac:
 # these inputs are not used in notebook, rather directly retrieved using path
     input:
         eiahydrogen="resources/EIA_hydro_generation_1995_2000_2014.csv",
-        vannkraft="resources/Vannkraftverk.csv",
-        hydroinstalledcap="resources/hydro_installed_cap.tsv",
+        #vannkraft="resources/Vannkraftverk.csv",
+        #hydroinstalledcap="resources/hydro_installed_cap.tsv",
+        nvehydrodata = "resources/new_counties/Vannkraftverk (1).csv",
+        nvehydrotype="resources/new_counties/datagrunnlag_fleksibilitet_vannkraft.csv",
+        euroshape="resources/new_counties/NUTS_RG_01M_2024_4326.geojson",
     output:
         hydrororcapfac=temp(
             modelpathyearonly / "capacity-factors_hydro_norway-3_{year}.csv"
