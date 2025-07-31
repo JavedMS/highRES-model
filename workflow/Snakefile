@@ -238,7 +238,7 @@ localrules:
     convert_results,
     bias_correct_wind,     
     extract_wind_cap2area, 
-    build_cutoff,           
+    #build_cutoff,           
     build_vre_parquet,
     build_vre_csv,
     compress_vre_gdx,
@@ -431,30 +431,30 @@ rule bias_correct_wind:
         "scripts/bias_correct_wind.py"
 
 # excluding all those grid cells having CF less than cut_off
-rule build_cutoff:
-    input:
-        changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
-    output:
-        exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_onwind}.tif",
+#rule build_cutoff:
+#    input:
+#        changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
+#    output:
+#        exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_onwind}.tif",
         #exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_wind}.tif",
         #exclusiontiff=modelpathyearonly / "cf_exclusion_{cutoff_onwind}.tif",
         
-    conda:
-        "envs/implement_cutoff.yml",
+#    conda:
+#        "envs/implement_cutoff.yml",
 #    params:
 #        cutoff_onwind=cutoff_onwind,    
-    notebook:
-        "notebooks/build_cutoff_tiff.py.ipynb"
+#    notebook:
+#        "notebooks/build_cutoff_tiff.py.ipynb"
 
 
 # this ensures that if cut_off is zero, no need to run the above rule
-def cutoff_needed(wildcards):
+#def cutoff_needed(wildcards):
 #def cutoff_needed():
-    returndict = {}
-    if wildcards.cutoff_onwind != str(0.0):
+#    returndict = {}
+#    if wildcards.cutoff_onwind != str(0.0):
     #if cutoff_values["onwind"] != 0.0:
-        returndict = {"cutoffexclusiontiff": rules.build_cutoff.output.exclusiontiff}
-    return returndict
+#        returndict = {"cutoffexclusiontiff": rules.build_cutoff.output.exclusiontiff}
+#    return returndict
 
 
 # Further base exclusions I can add are:
@@ -464,7 +464,7 @@ def cutoff_needed(wildcards):
 
 rule build_weather:
     input:
-        unpack(cutoff_needed),
+        #unpack(cutoff_needed),
         WDPA1a=shared_input_path / "geodata/onshore/WDPA_Ia_100.tiff",
         WDPA1b=shared_input_path / "geodata/onshore/WDPA_Ib_100.tiff",
         WDPA2=shared_input_path / "geodata/onshore/WDPA_II_100.tiff",
@@ -483,16 +483,17 @@ rule build_weather:
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
         cap2area=ancient(resource_path / "windcap2area"),         #it is assumed available already
         wind_parks=resource_path / "bias" / "nve_wind_parks.geojson",
-        #tech=scenario_exclusions_path + "Techn_All_Exc.zip",
-        #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
-        #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
+        cf_exclusion_solar=scenario_exclusions_path / "cf_exclusion_solar.tif",
+        cf_exclusion_windon=scenario_exclusions_path / "cf_exclusion_windon.tif",     #added as base exclusion for me, is it ok?
+        cf_exclusion_windoff=scenario_exclusions_path / "cf_exclusion_windoff.tif",
+        cf_exclusion_windoff_floating=scenario_exclusions_path / "cf_exclusion_windoff_floating.tif",
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
         #cutoffexclusiontiff=rules.build_cutoff.output.exclusiontiff
     output:
-        cf_exclusion_solar=temp(modelpath / "cf_exclusion_solar.tif"),  #exclusion only based on CF cutoff
+        #cf_exclusion_solar=modelpath / "cf_exclusion_solar.tif",  #exclusion only based on CF cutoff
         #cf_exclusion_windon=temp(modelpath / "cf_exclusion_windon.tif"), #Could be removed
-        cf_exclusion_windoff=temp(modelpath / "cf_exclusion_windoff.tif"),
-        cf_exclusion_windoff_floating=temp(modelpath / "cf_exclusion_windoff_floating.tif"),
+        #cf_exclusion_windoff=modelpath / "cf_exclusion_windoff.tif",
+        #cf_exclusion_windoff_floating=modelpath / "cf_exclusion_windoff_floating.tif",
         indreg=temp(modelpath / "indices_region.csv"),
         areassolar=temp(modelpath / "areas_norway_grid_solar.csv"),
         areaswindonshore=temp(modelpath / "areas_norway_grid_wind_onshore.csv"),

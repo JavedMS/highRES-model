@@ -3,4 +3,4 @@ paths:
   shared_input: /fp/projects01/ec85/shared_input/
   # abs_shared_code: /fp/projects01/ec85/models/shahzad/highRES-model/resources/4_model_code_shared/
   abs_con: /cluster/work/projects/ec85/EFF/wind_bias_correction/
-  resultsdir: /localscratch/ec-samvind/ 
+  resultsdir: /fp/projects01/ec85/models/group/samvind/shahzad/ 
