@@ -34,7 +34,8 @@ $offdigit
 * weather_yr = which weather year do we use
 * dem_yr = which demand year do we use
 
-* fx_trans (YES/NO) = fix transmission network to input values
+* trans_inv (OFF/USER) = new transmission capacity either OFF or capped to user value
+* trans_cap_lim = MW limit for each line available in model
 * fx_natcap (YES/NO) = fix total national capacities ->  let highRES decide where to place them
 
 * pen_gen (ON/OFF) = whether value of lost load (VoLL) is modelled
@@ -70,7 +71,8 @@ $setglobal vre_restrict ""
 $setglobal model_yr "2050"
 $setglobal weather_yr "2010"
 $setglobal dem_yr "2010"
-$setglobal fx_trans "YES"
+$setglobal trans_inv "OFF"
+$setglobal trans_cap_lim "20"
 $setglobal fx_natcap "NO"
 
 $set pen_gen "ON"
@@ -289,7 +291,9 @@ var_vre_gen_r(h,z,vre,r)                 VRE generation at grid cell level by ho
 var_vre_curtail(h,z,vre,r)               VRE power curtailed
 *var_non_vre_curtail(z,h,non_vre)
 var_trans_flow(h,z,z_alias,trans)        Flow of electricity from node to node by hour (MW)
-var_trans_pcap(z,z_alias,trans)          Capacity of node to node transmission links (MW)
+var_tot_trans_pcap(z,z_alias,trans)      Total transmission capacity node to node (MW)
+var_new_trans_pcap(z,z_alias,trans)      Capacity of node to node transmission links (MW)
+var_exist_trans_pcap(z,z_alias,trans)    Existing capacity of node to node transmissions links (MW)
 
 var_pgen(h,z)                            Penalty generation
 
@@ -319,15 +323,17 @@ trans_links_dist_bidir(z_alias,z,trans)$(trans_links_dist(z,z_alias,trans) > 0.)
 
 * Set transmission capacities to historic
 
-$ifThen "%fx_trans%" == "YES"
+var_exist_trans_pcap.FX(z,z_alias,trans)$(trans_links(z,z_alias,trans)) = trans_links_cap(z,z_alias,trans); 
 
-var_trans_pcap.FX(z,z_alias,trans)$(trans_links(z,z_alias,trans)) = trans_links_cap(z,z_alias,trans);
+$ifThen "%trans_inv%" == "OFF"
+
+var_new_trans_pcap.UP(z,z_alias,trans)$(trans_links(z,z_alias,trans))= 0;
 
 $else
 
 * Or limit all links to some maximum
 
-var_trans_pcap.UP(z,z_alias,trans)$(trans_links(z,z_alias,trans))=50.;
+var_new_trans_pcap.UP(z,z_alias,trans)$(trans_links(z,z_alias,trans))=%trans_cap_lim%;;
 
 $endIf
 
@@ -455,8 +461,10 @@ eq_gen_vre_r
 
 eq_area_max
 
+eq_trans_tot_pcap
 eq_trans_flow
-eq_trans_bidirect
+eq_trans_bidirect_new
+eq_trans_bidirect_exist
 $IF "%pen_gen%" == ON eq_pen_gen
 
 eq_co2_budget
@@ -513,12 +521,14 @@ $IF "%store_uc%" == ON eq_costs_store_start(z) .. costs_store_start(z) =E= sum((
 
 eq_costs_trans_capex(z) .. costs_trans_capex(z) =E=
 
-sum(trans_links(z,z_alias,trans),var_trans_pcap(z,z_alias,trans)*trans_links_dist(z,z_alias,trans)*trans_line_capex(trans))
-+sum(trans_links(z,z_alias,trans),var_trans_pcap(z,z_alias,trans)$(trans_links_dist(z,z_alias,trans))*trans_sub_capex(trans)*2);
+sum(trans_links(z,z_alias,trans),var_new_trans_pcap(z,z_alias,trans)*trans_links_dist(z,z_alias,trans)*trans_line_capex(trans))
++sum(trans_links(z,z_alias,trans),var_new_trans_pcap(z,z_alias,trans)$(trans_links_dist(z,z_alias,trans))*trans_sub_capex(trans)*2);
 
 * assume 2% fom costs for transmission
 
-eq_costs_trans_fom(z) .. costs_trans_fom(z) =E= costs_trans_capex(z)*0.02;
+eq_costs_trans_fom(z) .. costs_trans_fom(z) =E= costs_trans_capex(z)*0.02 + (sum(trans_links(z,z_alias,trans),
+var_exist_trans_pcap(z,z_alias,trans)*trans_links_dist(z,z_alias,trans)*trans_line_capex(trans))+sum(trans_links(z,z_alias,trans),
+var_exist_trans_pcap(z,z_alias,trans)$(trans_links_dist(z,z_alias,trans))*trans_sub_capex(trans)*2))*0.02;
 
 
 
@@ -616,13 +626,23 @@ eq_ramp_down(h,ramp_on(z,non_vre))$(gen_lin(z,non_vre)) .. var_gen(h,z,non_vre) 
 *** Transmission equations ***
 ******************************
 
+* Transmission total power capacity
+
+eq_trans_tot_pcap(trans_links(z,z_alias,trans)) .. var_tot_trans_pcap(z,z_alias,trans) =E= 
+                                                    var_new_trans_pcap(z,z_alias,trans) + var_exist_trans_pcap(z,z_alias,trans);
+
 * Transmitted electricity each hour must not exceed transmission capacity
 
-eq_trans_flow(h,trans_links(z,z_alias,trans)) .. var_trans_flow(h,z,z_alias,trans) =L= var_trans_pcap(z,z_alias,trans);
+eq_trans_flow(h,trans_links(z,z_alias,trans)) .. var_trans_flow(h,z,z_alias,trans) =L= 
+                                                (var_new_trans_pcap(z,z_alias,trans)+var_exist_trans_pcap(z,z_alias,trans));
 
 * Bidirectionality equation is needed when investments into new links are made...I think :)
 
-eq_trans_bidirect(trans_links(z,z_alias,trans)) ..  var_trans_pcap(z,z_alias,trans) =E= var_trans_pcap(z_alias,z,trans);
+eq_trans_bidirect_new(trans_links(z,z_alias,trans)) ..  
+        var_new_trans_pcap(z,z_alias,trans) =E= var_new_trans_pcap(z_alias,z,trans);
+
+eq_trans_bidirect_exist(trans_links(z,z_alias,trans)).. 
+        var_exist_trans_pcap(z,z_alias,trans) =E= var_exist_trans_pcap(z_alias,z,trans);
 
 
 ***********************

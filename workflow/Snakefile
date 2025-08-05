@@ -41,10 +41,10 @@ spatials = [
 
 trans = [
     "DefaultYes",
-    #"DefaultNO",
-    #"FIXEDOH",
-    #"LOWOH",
-    #"Subsurf"   #Constrained value is added with constraint in build_transmission script
+    "LOWOH",
+    "FIXEDOH",
+    #"SubsurfOFF",
+    #"Subsurfmust"   #not checked in working
 ]
 
 import_xxx = [
@@ -60,12 +60,12 @@ import_xxx = [
 
 forest_excls = [
     "VRS",
-    "ECS",
-    "NLF",
-    "LLF",
-    "PEB",
-    "HRV",
-    "HWE"
+    #"ECS",
+    #"NLF",
+    #"LLF",
+    #"PEB",
+    #"HRV",
+    #"HWE"
 ]
 
 
@@ -178,8 +178,8 @@ co2target = round(0, 1)
 # gamsfilesha256 = "9cced6b80dad705f6963e4dee1c48af4b8170d42444bb269b049ea8627d6c0e5"
 # gamsfilesha256 = "686cc7b751384f1f0401289c1da84f8454221b7eb146bf1b65eb5dae2d08c22a"
 # gamsfilesha256 = "21a42507bb4c2b9be551a4f35012d1e6645ea3ab401feaee7467c1af88b25c00"
-gamsfilesha256 = "c2664b9bbf178e43b36260c429b21e6eeec6a0f8e8f7c9b6a24b504a4bc8ce25"
-#gamsfilesha256 = "8760c1dfea64d41adcc75c16a4e0902f076e9f3a4468e455ad1d7fc1094a8a1b"
+#gamsfilesha256 = "c2664b9bbf178e43b36260c429b21e6eeec6a0f8e8f7c9b6a24b504a4bc8ce25"
+gamsfilesha256 = "5890524f5b296acbd166a186ec98eac18a4eba2aff9ad10b04503368c54167fc"
 
 CORRECTOR_YEAR = 2019
 num_near_wind_parks = 10

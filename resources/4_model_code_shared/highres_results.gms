@@ -38,6 +38,8 @@ parameter o_transVarC;
 o_transVarC=sum((trans_links(z,z_alias,trans),h),var_trans_flow.L(h,z,z_alias,trans)*trans_varom(trans))
 
 
+$ontext
+
 * Annualised fixed costs
 parameter o_capitalC;
 o_capitalC=sum(non_vre,var_new_pcap.L(non_vre)*gen_capex(non_vre))
@@ -75,6 +77,7 @@ o_capitalC_tot=o_capitalstoreC+o_capitalC
 parameter o_variableC_tot;
 o_variableC_tot=o_variablestoreC+o_variableC
 
+$offtext
 
 ***************
 *Emissions
@@ -94,7 +97,8 @@ o_emissions_all=Sum((h,z,non_vre), o_emissions(h,z,non_vre));
 ***************
 
 parameter o_trans_cap_sum(trans);
-o_trans_cap_sum(trans)=sum((z,z_alias),var_trans_pcap.L(z,z_alias,trans))/2  ;
+o_trans_cap_sum(trans)=sum((z,z_alias),var_new_trans_pcap.L(z,z_alias,trans))/2
+                                +sum((z,z_alias),var_exist_trans_pcap.L(z,z_alias,trans))/2  ;
 
 
 
