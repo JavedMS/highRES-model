@@ -6,4 +6,5 @@ paths:
   #abs_shared_code: ../../../../resources/4_model_code_shared
   #abs_con: /cluster/work/projects/ec85/joint-wind/koenandaleksera5/
   abs_con: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/wind_bias_correction/
-  resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/Forest_work/results/new_counties
+  #resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/Forest_work/results/new_counties
+  resultsdir: /fp/homes01/u01/ec-javedm/ec85/cluster/EFF/Forest_work/results/latest

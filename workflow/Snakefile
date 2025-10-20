@@ -42,7 +42,7 @@ spatials = [
 trans = [
     "DefaultYes",
     "LOWOH",
-    "FIXEDOH",
+    #"FIXEDOH",
     #"SubsurfOFF",
     #"Subsurfmust"   #not checked in working
 ]
@@ -60,12 +60,13 @@ import_xxx = [
 
 forest_excls = [
     "VRS",
-    #"ECS",
-    #"NLF",
-    #"LLF",
-    #"PEB",
-    #"HRV",
-    #"HWE"
+    "ECS",
+    "NLF",
+    "LLF",
+    "PEB",
+    "HRV",
+    "HWE",
+    "cul"
 ]
 
 
