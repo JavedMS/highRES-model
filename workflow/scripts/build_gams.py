@@ -45,8 +45,7 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     list_of_lines.insert(454, 'eq_vre_new_pcap_w' + "\n")
     list_of_lines.insert(583, 'eq_vre_new_pcap_s(z)$gen_lim(z,"Solar") .. var_new_pcap_z(z, "Solar") =L= par_vre_new_pcap_s(z)*var_new_pcap("Solar");'+"\n")
     list_of_lines.insert(584, "\n")
-    #list_of_lines.insert(575, 'eq_vre_new_pcap_w(z)$gen_lim(z,"Windonshore") .. var_new_pcap_z(z, "Windonshore") =L= par_vre_new_pcap_w(z)*var_new_pcap("Windonshore");'+"\n")
-    list_of_lines.insert(585,'eq_vre_new_pcap_w(z)$(gen_lim(z,"Windonshore_OF") or gen_lim(z,"Windonshore_F")) .. var_new_pcap_z(z, "Windonshore_OF") + var_new_pcap_z(z, "Windonshore_F") =L= par_vre_new_pcap_w(z)*(var_new_pcap("Windonshore_OF") + var_new_pcap("Windonshore_F"));'+"\n")
+    list_of_lines.insert(585, 'eq_vre_new_pcap_w(z)$gen_lim(z,"Windonshore") .. var_new_pcap_z(z, "Windonshore") =L= par_vre_new_pcap_w(z)*var_new_pcap("Windonshore");'+"\n")
     list_of_lines.insert(586, "\n")
 
     #list_of_lines.insert(455, 'eq_store_PHS_limit' + "\n")
@@ -61,7 +60,7 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
         list_of_lines.insert(456, 'eq_new_pcap_sub2' + "\n")
         list_of_lines.insert(591, f'eq_new_pcap_sub1 .. var_new_pcap("Solar") =L= {varnewpcapQ[0]} * sum(g, var_new_pcap(g));' + "\n")
         list_of_lines.insert(592, "\n")
-        list_of_lines.insert(593, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore_OF")+var_new_pcap("Windonshore_F")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
+        list_of_lines.insert(593, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
         list_of_lines.insert(594, "\n")
 
 
