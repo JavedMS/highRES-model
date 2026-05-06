@@ -24,7 +24,7 @@ date_range=["01-01","12-31"]
 
 # Inputs to be used as wildcards to make changes based on the requirement
 weatheryears = [
-    #"1995",%
+    #"1995",
     "2010"
 ]
 
@@ -66,7 +66,7 @@ forest_excls = [
     "PEB",
     "HRV",
     "HWE",
-    "cul"
+    "CUL"
 ]
 
 
@@ -501,6 +501,7 @@ rule build_weather:
         #cap2area=rules.extract_wind_cap2area.output.windcap2area,
         cap2area=ancient("resources/windcap2area"),         #it is assumed available already
         wind_parks="resources/bias/nve_wind_parks.geojson",
+        offshore_wind_parks="resources/bias/norway_offshore_windfarms.geojson",
         OF_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_OF.tif",
         F_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_F.tif",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?

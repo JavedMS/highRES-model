@@ -12,7 +12,7 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     list_of_lines[
         46
     ] = f'$setglobal codefolderpath "{snakemake.params.sharedcodepath}"\n'
-    list_of_lines[50] = '$setglobal gdx2sql "OFF" \n'
+    list_of_lines[49] = '$setglobal gdx2sql "OFF" \n'
     list_of_lines[70] = f'$setglobal weather_yr "{year}"\n'
     list_of_lines[71] = f'$setglobal dem_yr "{year}"\n'
     #\n is not included below becasue line still continues
@@ -63,6 +63,34 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
         list_of_lines.insert(592, "\n")
         list_of_lines.insert(593, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore_OF")+var_new_pcap("Windonshore_F")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
         list_of_lines.insert(594, "\n")
+
+
+    list_of_lines[159] = 'vre_lim(vre,z,r)=((area(vre,z,r)+(gen_exist_pcap_z(z,vre,"FX")$sameas(z,r)))>0.); \n'
+    list_of_lines[165] = 'gen_lim(z,vre)=((sum(r,area(vre,z,r))+sum(lt,gen_exist_pcap_z(z,vre,lt)))>0.); \n'
+    list_of_lines.insert(455, 'eq_costs_gen_vreconnection_bottom' + "\n")
+    list_of_lines.insert(456, 'eq_costs_gen_vreconnection_floating' + "\n")
+
+    list_of_lines.insert(273, 'costs_gen_vreconnection_bottom(z)' + "\n")
+    list_of_lines.insert(274, 'costs_gen_vreconnection_floating(z)' + "\n")
+
+    equation_text1 = (
+    'eq_costs_gen_vreconnection_bottom(z) .. costs_gen_vreconnection_bottom(z) =E=\n'
+    '    sum(vre_lim("Windoffshore",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVACWindoffshore")),\n'
+    '        var_new_vre_pcap_r(z,"Windoffshore",r)*((trans_links_dist(z,z_alias,"HVACWindoffshore")*trans_line_capex("HVACWindoffshore"))\n'
+    '       +trans_sub_capex("HVACWindoffshore"))));' + "\n"
+)
+
+    equation_text2 = (
+    'eq_costs_gen_vreconnection_floating(z) .. costs_gen_vreconnection_floating(z) =E=\n'
+    '    sum(vre_lim("Windoffshorefloating",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVDCWindoffshore")),\n'
+    '        var_new_vre_pcap_r(z,"Windoffshorefloating",r)*((trans_links_dist(z,z_alias,"HVDCWindoffshore")*trans_line_capex("HVDCWindoffshore"))\n'
+    '        +trans_sub_capex("HVDCWindoffshore"))));' + "\n"
+)
+    list_of_lines.insert(541, equation_text1)
+    list_of_lines.insert(542, equation_text2)    
+
+    list_of_lines.insert(492, '+costs_gen_vreconnection_bottom(z)' + "\n")
+    list_of_lines.insert(493, '+costs_gen_vreconnection_floating(z)' + "\n")
 
 
     with open(snakemake.output[0], "w", encoding="utf8") as file:
