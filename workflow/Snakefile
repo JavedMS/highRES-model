@@ -65,16 +65,20 @@ forest_excls = [
     "LLF",
     "PEB",
     "HRV",
-    "HWE",
-    "CUL"
+ #   "HWE",
+ #   "CUL"
 ]
 
+buffer = ["0", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000", "1500", "2000", "2500", "3000"]
+#buffer = ["0"]
 
 # [Solar, Windonshore, Windoffshore, Windoffshorefloating],
 # No clear division between offshore & offshore floating. set solar and onshore only and optimize the ratio b/w these two...
 varnewpcapQ = {
-    'OPT': [1, 1, 1, 1],    #Scenario to freely optimize the newpcap. didnot change OPT name itself
-    #'QS1': [0.258, 0.235, 1, 1],
+    'S1': [13, 1, 1, 1],    #Scenario to freely optimize the newpcap. didnot change OPT name itself
+    'S2': [30, 0.235, 1, 1],
+    'S3':[40],
+    'S4': [60],
 } 
 varnewpcapQ_keys = list (varnewpcapQ.keys())
 
@@ -120,12 +124,12 @@ fylke_tech_keys = list(fylke_tech_limit.keys())
 
 
 # Use product to create all possible combinations of the values in the lists
-scenarios_product = list(itertools.product(weatheryears, demandyears, spatials, trans, import_xxx, forest_excls, 
+scenarios_product = list(itertools.product(weatheryears, demandyears, spatials, trans, import_xxx, forest_excls, buffer, 
                         varnewpcapQ_keys, corine_solar_keys, corine_onshore_keys, fylke_tech_keys,
                          cutoffs_solar, cutoffs_onwind, cutoffs_offwind))
 
 # Create the DataFrame from the list of all combinations
-column_names = ['weatheryears', 'demandyears', 'spatials', 'trans', 'import_xxx', 'forest_excls', 'varnewpcapQ', 'corines_solar',
+column_names = ['weatheryears', 'demandyears', 'spatials', 'trans', 'import_xxx', 'forest_excls', 'buffer', 'varnewpcapQ', 'corines_solar',
                 'corines_onshore', 'fylke_techs', 'cutoffs_solar', 'cutoffs_onwind',
                 'cutoffs_offwind']
 scenarios = pd.DataFrame(scenarios_product, columns=column_names)
@@ -160,6 +164,7 @@ spatials = scenarios.spatials.to_list()
 trans = scenarios.trans.to_list()
 import_xxx = scenarios.import_xxx.to_list()
 forest_excls = scenarios.forest_excls.to_list()
+buffer = scenarios.buffer.to_list()
 varnewpcapQs = scenarios.varnewpcapQ.to_list()
 corines_solar = scenarios.corines_solar.to_list()
 corines_onshore = scenarios.corines_onshore.to_list() 
@@ -219,7 +224,7 @@ scenarios.to_csv(resultspath / "scenarios.csv", sep="\t")
 # Relative path to the built model and built inputs
 yearonlypart = "models/{year}/"
 #scenariopart = "{natur}_{fauna}_{sami}_{neigh}_{solar}_{spatial}_{cutoff_wind}/"
-scenariopart = "{year}_{dem_yr}_{spatial}_{trans}_{Importx}_{forestexls}_{varnewpcapQ}_{corine_solar}_" + \
+scenariopart = "{year}_{dem_yr}_{spatial}_{trans}_{Importx}_{forestexls}_{buffers}_{varnewpcapQ}_{corine_solar}_" + \
                 "{corine_onshore}_{fylke_tech}_{cutoff_solar}_" + \
                  "{cutoff_onwind}_{cutoff_offwind}/"
 modelpathyearonly = resultspath / yearonlypart
@@ -269,6 +274,7 @@ rule all:
             trans=trans,
             Importx=import_xxx,
             forestexls=forest_excls,
+            buffers=buffer,
             varnewpcapQ=varnewpcapQs,
             corine_solar=corines_solar,
             corine_onshore=corines_onshore,
@@ -312,7 +318,6 @@ rule build_gams:
         co2intensity=co2target,
         sharedcodepath=abs_shared_code_path,
         varnewpcapQ=lambda wildcards: varnewpcapQ[wildcards.varnewpcapQ],
-        enable_fixed_ratios=lambda wildcards: False if wildcards.varnewpcapQ == 'OPT' else True,
         fylke_tech_limit=lambda wildcards: json.dumps(fylke_tech_limit),
     output:
         gamsfile2=modelpath / "highres1.gms",
@@ -502,8 +507,8 @@ rule build_weather:
         cap2area=ancient("resources/windcap2area"),         #it is assumed available already
         wind_parks="resources/bias/nve_wind_parks.geojson",
         offshore_wind_parks="resources/bias/norway_offshore_windfarms.geojson",
-        OF_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_OF.tif",
-        F_excls=scenario_exclusions_path + "highRES_raster/{forestexls}_F.tif",
+        OF_excls=scenario_exclusions_path + "highRES_raster/Buffer/{forestexls}_OF_{buffers}.tif",
+        F_excls=scenario_exclusions_path + "highRES_raster/Buffer/{forestexls}_F_{buffers}.tif",
         #neighex=scenario_exclusions_path + "Neigh_Low_Exc.zip",     #added as base exclusion for me, is it ok?
         #naturex=scenario_exclusions_path + "Natur_{natur}_Exc.zip",
         changedbiaswind=rules.bias_correct_wind.output.corrected_for_highres,
@@ -532,7 +537,7 @@ rule build_weather:
     conda:
         "envs/build_weather.yml"
     log:
-        notebook="logs/notebooks/" + logpath + "highRES-Norway_grid.py.ipynb",
+        notebook="logs/notebooks/" + logpath + "highRES-Norway_grid.py.ipynb", 
     resources:
         mem_mb=50000,  # TODO: Find out how much this rule needs,
         # should be constant (regional/grid)

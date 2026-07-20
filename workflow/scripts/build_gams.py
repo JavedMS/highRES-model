@@ -3,7 +3,7 @@ Change different parameters in the GAMS code
 """
 import json
 
-def build_gams(year, varnewpcapQ, enable_fixed_ratios):
+def build_gams(year, varnewpcapQ):
     """
     Crudely modify the GAMS code textfile, will break if line numbers change
     """
@@ -52,19 +52,19 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     #list_of_lines.insert(455, 'eq_store_PHS_limit' + "\n")
     #list_of_lines.insert(588, 'eq_store_PHS_limit .. sum((z,h)$s_lim(z,"PumpedHydro"),var_store_gen(h,z,"PumpedHydro")) =L= 1761;' + "\n")
     #list_of_lines.insert(589, "\n")
-    #list_of_lines.insert(455, 'eq_new_pcap_sub1' + "\n")
-    #list_of_lines.insert(588, 'eq_new_pcap_sub1 .. var_new_pcap("Solar") =L= 30;' + "\n")
-    #list_of_lines.insert(589, "\n")
+
     # Only add the constraints if enable_fixed_ratios is True:
-    if enable_fixed_ratios:    
-        list_of_lines.insert(455, 'eq_new_pcap_sub1' + "\n")
-        list_of_lines.insert(456, 'eq_new_pcap_sub2' + "\n")
-        list_of_lines.insert(591, f'eq_new_pcap_sub1 .. var_new_pcap("Solar") =L= {varnewpcapQ[0]} * sum(g, var_new_pcap(g));' + "\n")
-        list_of_lines.insert(592, "\n")
-        list_of_lines.insert(593, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore_OF")+var_new_pcap("Windonshore_F")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
-        list_of_lines.insert(594, "\n")
+    #if enable_fixed_ratios:    
+    #    list_of_lines.insert(455, 'eq_new_pcap_sub1' + "\n")
+    #    list_of_lines.insert(456, 'eq_new_pcap_sub2' + "\n")
+    #    list_of_lines.insert(591, f'eq_new_pcap_sub1 .. var_new_pcap("Solar") =L= {varnewpcapQ[0]} * sum(g, var_new_pcap(g));' + "\n")
+    #    list_of_lines.insert(592, "\n")
+    #    list_of_lines.insert(593, f'eq_new_pcap_sub2 .. var_new_pcap("Windonshore_OF")+var_new_pcap("Windonshore_F")=L= {varnewpcapQ[1]} * sum(g, var_new_pcap(g));' + "\n")
+    #    list_of_lines.insert(594, "\n")
 
 
+    list_of_lines.insert(456, 'eq_pcap_solar' + "\n")
+    list_of_lines.insert(590, f'eq_pcap_solar .. var_new_pcap("Solar") =L= {varnewpcapQ[0]};' + "\n")
     list_of_lines[159] = 'vre_lim(vre,z,r)=((area(vre,z,r)+(gen_exist_pcap_z(z,vre,"FX")$sameas(z,r)))>0.); \n'
     list_of_lines[165] = 'gen_lim(z,vre)=((sum(r,area(vre,z,r))+sum(lt,gen_exist_pcap_z(z,vre,lt)))>0.); \n'
     list_of_lines.insert(455, 'eq_costs_gen_vreconnection_bottom' + "\n")
@@ -74,28 +74,42 @@ def build_gams(year, varnewpcapQ, enable_fixed_ratios):
     list_of_lines.insert(274, 'costs_gen_vreconnection_floating(z)' + "\n")
 
     equation_text1 = (
-    'eq_costs_gen_vreconnection_bottom(z) .. costs_gen_vreconnection_bottom(z) =E=\n'
-    '    sum(vre_lim("Windoffshore",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVACWindoffshore")),\n'
-    '        var_new_vre_pcap_r(z,"Windoffshore",r)*((trans_links_dist(z,z_alias,"HVACWindoffshore")*trans_line_capex("HVACWindoffshore"))\n'
-    '       +trans_sub_capex("HVACWindoffshore"))));' + "\n"
-)
+        'eq_costs_gen_vreconnection_bottom(z) .. costs_gen_vreconnection_bottom(z) =E=\n'
+        '    sum(vre_lim("Windoffshore",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVACWindoffshore")),\n'
+        '        var_new_vre_pcap_r(z,"Windoffshore",r)*(\n'
+        '            (trans_links_dist(z,z_alias,"HVACWindoffshore")*\n'
+        '                ((trans_line_capex("HVACWindoffshore")$(trans_links_dist(z,z_alias,"HVACWindoffshore") <= 1)) +\n'
+        '                 (trans_line_capex("HVDCWindoffshore")$(trans_links_dist(z,z_alias,"HVACWindoffshore") > 1)))) +\n'
+        '            ((trans_sub_capex("HVACWindoffshore")$(trans_links_dist(z,z_alias,"HVACWindoffshore") <= 1)) +\n'
+        '             (trans_sub_capex("HVDCWindoffshore")$(trans_links_dist(z,z_alias,"HVACWindoffshore") > 1)))\n'
+        '        )\n'
+        '    ));\n'
+    )
 
     equation_text2 = (
-    'eq_costs_gen_vreconnection_floating(z) .. costs_gen_vreconnection_floating(z) =E=\n'
-    '    sum(vre_lim("Windoffshorefloating",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVDCWindoffshore")),\n'
-    '        var_new_vre_pcap_r(z,"Windoffshorefloating",r)*((trans_links_dist(z,z_alias,"HVDCWindoffshore")*trans_line_capex("HVDCWindoffshore"))\n'
-    '        +trans_sub_capex("HVDCWindoffshore"))));' + "\n"
-)
-    list_of_lines.insert(541, equation_text1)
-    list_of_lines.insert(542, equation_text2)    
+        'eq_costs_gen_vreconnection_floating(z) .. costs_gen_vreconnection_floating(z) =E=\n'
+        '    sum(vre_lim("Windoffshorefloating",z,r), sum(z_alias$(sameas(z_alias,r) and trans_links_dist(z,z_alias,"HVDCWindoffshore")),\n'
+        '        var_new_vre_pcap_r(z,"Windoffshorefloating",r)*(\n'
+        '            (trans_links_dist(z,z_alias,"HVDCWindoffshore")*\n'
+        '                ((trans_line_capex("HVACWindoffshore")$(trans_links_dist(z,z_alias,"HVDCWindoffshore") <= 1)) +\n'
+        '                 (trans_line_capex("HVDCWindoffshore")$(trans_links_dist(z,z_alias,"HVDCWindoffshore") > 1)))) +\n'
+        '            ((trans_sub_capex("HVACWindoffshore")$(trans_links_dist(z,z_alias,"HVDCWindoffshore") <= 1)) +\n'
+        '             (trans_sub_capex("HVDCWindoffshore")$(trans_links_dist(z,z_alias,"HVDCWindoffshore") > 1)))\n'
+        '        )\n'
+        '    ));\n'
+    )
 
-    list_of_lines.insert(492, '+costs_gen_vreconnection_bottom(z)' + "\n")
-    list_of_lines.insert(493, '+costs_gen_vreconnection_floating(z)' + "\n")
+
+    list_of_lines.insert(542, equation_text1)
+    list_of_lines.insert(543, equation_text2)    
+
+    list_of_lines.insert(493, '+costs_gen_vreconnection_bottom(z)' + "\n")
+    list_of_lines.insert(494, '+costs_gen_vreconnection_floating(z)' + "\n")
 
 
     with open(snakemake.output[0], "w", encoding="utf8") as file:
         file.writelines(list_of_lines)
 
 
-build_gams(snakemake.wildcards.year, snakemake.params.varnewpcapQ, snakemake.params.enable_fixed_ratios)
+build_gams(snakemake.wildcards.year, snakemake.params.varnewpcapQ)
 #build_gams(snakemake.wildcards.year)
